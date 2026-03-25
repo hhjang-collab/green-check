@@ -135,9 +135,16 @@ with st.sidebar:
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# 상단 필터
+# 상단 필터 (3가지 유형으로 확장)
 st.markdown("### 📌 검토 유형")
-global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
+global_type = st.radio(
+    "검토 유형 선택", 
+    ["tech", "prod", "company"], 
+    format_func=lambda x: "🟢 녹색기술인증" if x == "tech" else ("📦 녹색기술제품" if x == "prod" else "🏢 녹색전문기업"), 
+    horizontal=True, 
+    label_visibility="collapsed",
+    key="global_type" # 초기화를 위한 key 추가
+)
 
 st.subheader("✅ 검토 체크리스트")
 
@@ -145,101 +152,108 @@ results = []
 total_errors = 0
 tpl = st.session_state.templates
 
-# [1. 기업 정보 (공통)]
-with st.expander("1. 기업 정보 확인", expanded=True):
-    sec1_errors = []
-    
-    if st.checkbox("대표자명 불일치", key="ceoName"):
-        sec1_errors.append(tpl["ceoName"])
-        total_errors += 1
+# 녹색전문기업일 경우 빈 화면 렌더링
+if global_type == "company":
+    st.info("🏢 녹색전문기업 검토 체크리스트는 추후 업데이트 예정입니다.")
+else:
+    # [1. 기업 정보 (공통)]
+    with st.expander("1. 기업 정보 확인", expanded=True):
+        sec1_errors = []
         
-    if st.checkbox("법인등기부등본 / 사업자등록증 관련 오류", key="corpReg"):
-        is_indiv = st.radio("해당 기업이 개인사업자인가요?", ["선택 안됨", "예(개인)", "아니오(법인)"], horizontal=True)
-        
-        if is_indiv == "아니오(법인)":
-            sec1_errors.append(tpl["corpReg_corp"])
+        if st.checkbox("대표자명 불일치", key="ceoName"):
+            sec1_errors.append(tpl["ceoName"])
             total_errors += 1
-        elif is_indiv == "예(개인)":
-            is_recent = st.radio("사업자등록증이 최근 3개월 이내 발행본인가요?", ["선택 안됨", "예", "아니오"], horizontal=True)
-            if is_recent == "아니오":
-                sec1_errors.append(tpl["corpReg_indiv"])
+            
+        if st.checkbox("법인등기부등본 / 사업자등록증 관련 오류", key="corpReg"):
+            # 초기화를 위해 key 추가
+            is_indiv = st.radio("해당 기업이 개인사업자인가요?", ["선택 안됨", "예(개인)", "아니오(법인)"], horizontal=True, key="is_indiv")
+            
+            if is_indiv == "아니오(법인)":
+                sec1_errors.append(tpl["corpReg_corp"])
+                total_errors += 1
+            elif is_indiv == "예(개인)":
+                # 초기화를 위해 key 추가
+                is_recent = st.radio("사업자등록증이 최근 3개월 이내 발행본인가요?", ["선택 안됨", "예", "아니오"], horizontal=True, key="is_recent")
+                if is_recent == "아니오":
+                    sec1_errors.append(tpl["corpReg_indiv"])
+                    total_errors += 1
+                    
+        if sec1_errors:
+            results.append("[기업 정보 보완]\n" + "\n".join(sec1_errors))
+
+    # [2. 기술/제품 설명서 (공통)]
+    with st.expander("2. 설명서 확인", expanded=True):
+        sec2_errors = []
+        
+        st.markdown("**2-1. 시스템 정보 불일치**")
+        cols2_1 = st.columns(2)
+        if cols2_1[0].checkbox("기술명/제품명 불일치", key="s2_1_1"): 
+            sec2_errors.append(tpl["s2_1_1"]); total_errors += 1
+        
+        st.markdown("**2-2. 1p 요약서 내용 불일치**")
+        cols2_2 = st.columns(2)
+        if cols2_2[0].checkbox("분류체계", key="s2_2_1"): sec2_errors.append(tpl["s2_2_1"]); total_errors += 1
+        if cols2_2[1].checkbox("분류코드", key="s2_2_2"): sec2_errors.append(tpl["s2_2_2"]); total_errors += 1
+        if cols2_2[0].checkbox("핵심요소기술", key="s2_2_3"): sec2_errors.append(tpl["s2_2_3"]); total_errors += 1
+        if cols2_2[1].checkbox("기술수준", key="s2_2_4"): sec2_errors.append(tpl["s2_2_4"]); total_errors += 1
+
+        st.markdown("**2-3. 목차 누락 (해당 번호 클릭)**")
+        toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
+        if global_type == "prod":
+            toc_items.insert(3, "1-4")
+            
+        missing_tocs = []
+        cols2_3 = st.columns(4) 
+        for idx, toc in enumerate(toc_items):
+            if cols2_3[idx % 4].checkbox(f"({toc})", key=f"toc_{toc}"):
+                missing_tocs.append(toc)
                 total_errors += 1
                 
-    if sec1_errors:
-        results.append("[기업 정보 보완]\n" + "\n".join(sec1_errors))
-
-# [2. 기술/제품 설명서 (공통)]
-with st.expander("2. 설명서 확인", expanded=True):
-    sec2_errors = []
-    
-    st.markdown("**2-1. 시스템 정보 불일치**")
-    cols2_1 = st.columns(2)
-    if cols2_1[0].checkbox("기술명/제품명 불일치", key="s2_1_1"): 
-        sec2_errors.append(tpl["s2_1_1"]); total_errors += 1
-    
-    st.markdown("**2-2. 1p 요약서 내용 불일치**")
-    cols2_2 = st.columns(2)
-    if cols2_2[0].checkbox("분류체계", key="s2_2_1"): sec2_errors.append(tpl["s2_2_1"]); total_errors += 1
-    if cols2_2[1].checkbox("분류코드", key="s2_2_2"): sec2_errors.append(tpl["s2_2_2"]); total_errors += 1
-    if cols2_2[0].checkbox("핵심요소기술", key="s2_2_3"): sec2_errors.append(tpl["s2_2_3"]); total_errors += 1
-    if cols2_2[1].checkbox("기술수준", key="s2_2_4"): sec2_errors.append(tpl["s2_2_4"]); total_errors += 1
-
-    st.markdown("**2-3. 목차 누락 (해당 번호 클릭)**")
-    toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
-    if global_type == "prod":
-        toc_items.insert(3, "1-4")
-        
-    missing_tocs = []
-    cols2_3 = st.columns(4) 
-    for idx, toc in enumerate(toc_items):
-        if cols2_3[idx % 4].checkbox(f"({toc})", key=f"toc_{toc}"):
-            missing_tocs.append(toc)
-            total_errors += 1
+        if missing_tocs:
+            sec2_errors.append(tpl["s2_3"].replace("{missing_tocs}", ", ".join(missing_tocs)))
             
-    if missing_tocs:
-        sec2_errors.append(tpl["s2_3"].replace("{missing_tocs}", ", ".join(missing_tocs)))
-        
-    if sec2_errors:
-        results.append("[설명서 보완]\n" + "\n".join(sec2_errors))
+        if sec2_errors:
+            results.append("[설명서 보완]\n" + "\n".join(sec2_errors))
 
-# [3, 4. 녹색기술 전용 섹션]
-if global_type == "tech":
-    with st.expander("3. 지식재산권 확인 (녹색기술)", expanded=True):
-        sec3_errors = []
-        if st.checkbox("등록 특허가 아님 (출원/공개 상태)", key="s3_1"):
-            sec3_errors.append(tpl["s3_1"]); total_errors += 1
-        if st.checkbox("특허등록원부 미제출", key="s3_2"):
-            sec3_errors.append(tpl["s3_2"]); total_errors += 1
-        if st.checkbox("공동권리자 존재 및 동의서 미제출", key="s3_3"):
-            sec3_errors.append(tpl["s3_3"]); total_errors += 1
-            
-        if sec3_errors:
-            results.append("[지식재산권 보완]\n" + "\n".join(sec3_errors))
+    # [3, 4. 녹색기술 전용 섹션]
+    if global_type == "tech":
+        with st.expander("3. 지식재산권 확인 (녹색기술)", expanded=True):
+            sec3_errors = []
+            if st.checkbox("등록 특허가 아님 (출원/공개 상태)", key="s3_1"):
+                sec3_errors.append(tpl["s3_1"]); total_errors += 1
+            if st.checkbox("특허등록원부 미제출", key="s3_2"):
+                sec3_errors.append(tpl["s3_2"]); total_errors += 1
+            if st.checkbox("공동권리자 존재 및 동의서 미제출", key="s3_3"):
+                sec3_errors.append(tpl["s3_3"]); total_errors += 1
+                
+            if sec3_errors:
+                results.append("[지식재산권 보완]\n" + "\n".join(sec3_errors))
 
-    with st.expander("4. 시험성적서 확인 (녹색기술)", expanded=True):
-        sec4_errors = []
-        if st.checkbox("공인기관성적서 미제출", key="s4_1"):
-            ans = st.radio("자체시험성적서 및 사유서를 대신 제출했나요?", ["선택 안됨", "예", "아니오"], horizontal=True)
-            if ans == "아니오":
-                sec4_errors.append(tpl["s4_1"])
-                total_errors += 1
-        if st.checkbox("신청 기업 명의 불일치", key="s4_2"):
-            sec4_errors.append(tpl["s4_2"]); total_errors += 1
-            
-        if sec4_errors:
-            results.append("[시험성적서 보완]\n" + "\n".join(sec4_errors))
+        with st.expander("4. 시험성적서 확인 (녹색기술)", expanded=True):
+            sec4_errors = []
+            if st.checkbox("공인기관성적서 미제출", key="s4_1"):
+                # 초기화를 위해 key 추가
+                ans = st.radio("자체시험성적서 및 사유서를 대신 제출했나요?", ["선택 안됨", "예", "아니오"], horizontal=True, key="ans_s4")
+                if ans == "아니오":
+                    sec4_errors.append(tpl["s4_1"])
+                    total_errors += 1
+            if st.checkbox("신청 기업 명의 불일치", key="s4_2"):
+                sec4_errors.append(tpl["s4_2"]); total_errors += 1
+                
+            if sec4_errors:
+                results.append("[시험성적서 보완]\n" + "\n".join(sec4_errors))
 
-# [3. 녹색제품 전용 섹션]
-else:
-    with st.expander("3. 제품 관련 서류 확인 (녹색제품)", expanded=True):
-        sec5_errors = []
-        if st.checkbox("품질경영인증 미제출", key="s5_1"):
-            sec5_errors.append(tpl["s5_1"]); total_errors += 1
-        if st.checkbox("생산현장 증빙 미제출", key="s5_2"):
-            sec5_errors.append(tpl["s5_2"]); total_errors += 1
-            
-        if sec5_errors:
-            results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
+    # [3. 녹색제품 전용 섹션]
+    elif global_type == "prod":
+        with st.expander("3. 제품 관련 서류 확인 (녹색제품)", expanded=True):
+            sec5_errors = []
+            if st.checkbox("품질경영인증 미제출", key="s5_1"):
+                sec5_errors.append(tpl["s5_1"]); total_errors += 1
+            if st.checkbox("생산현장 증빙 미제출", key="s5_2"):
+                sec5_errors.append(tpl["s5_2"]); total_errors += 1
+                
+            if sec5_errors:
+                results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
 
 # --- 8. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
@@ -249,9 +263,8 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=325, label_visibility="collapsed")
-    
-    # 텍스트 에어리어와 버튼 사이의 가로선 제거됨
+    # 복사 버튼이 자동으로 생성되는 st.code로 변경 (수정 불가, 복사 전용)
+    st.code(final_output, language="text")
     
     if st.button("🔄 초기화", use_container_width=True):
         clear_form()
