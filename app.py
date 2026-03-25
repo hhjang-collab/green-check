@@ -251,8 +251,7 @@ with st.sidebar:
         
     st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=300, label_visibility="collapsed")
     
-    # 다크모드 완벽 대응 구분선 (currentColor 사용)
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">', unsafe_allow_html=True)
+    # 텍스트 에어리어와 버튼 사이의 가로선 제거됨
     
     if st.button("🔄 초기화", use_container_width=True):
         clear_form()
