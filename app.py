@@ -249,7 +249,7 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=300, label_visibility="collapsed")
+    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=350, label_visibility="collapsed")
     
     # 다크모드 완벽 대응 구분선 (currentColor 사용)
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">', unsafe_allow_html=True)
