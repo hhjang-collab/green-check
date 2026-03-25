@@ -38,13 +38,8 @@ st.markdown(f"""
     /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
     
-    /* 사이드바 st.code 영역 텍스트 자동 줄바꿈 및 최소 높이/폰트 조절 */
-    [data-testid="stCodeBlock"] {{
-        min-height: 300px;
-    }}
-    [data-testid="stCodeBlock"] code {{
-        white-space: pre-wrap !important;
-        word-break: break-word !important;
+    /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
+    [data-testid="stSidebar"] textarea {{
         font-size: 13px !important;
         line-height: 1.5 !important;
     }}
@@ -91,11 +86,11 @@ default_templates = {
 if "templates" not in st.session_state:
     st.session_state["templates"] = default_templates.copy()
 
-# 초기화를 완벽하게 수행하기 위한 on_click 콜백 함수
+# 완벽한 초기화를 위한 콜백 함수 (st.rerun 충돌 방지)
 def clear_form():
-    for key in list(st.session_state.keys()):
-        if key not in ["authenticated", "templates"]:
-            del st.session_state[key]
+    keys_to_delete = [key for key in st.session_state.keys() if key not in ["authenticated", "templates"]]
+    for key in keys_to_delete:
+        del st.session_state[key]
 
 # --- 5. 팝업창 (모달) UI 정의 ---
 @st.dialog("⚙️ 보완 요청 문구 설정")
@@ -108,7 +103,6 @@ def show_settings_modal():
     st.session_state.templates["corpReg_indiv"] = st.text_input("개인사업자등록증 관련", value=st.session_state.templates["corpReg_indiv"])
     st.session_state.templates["s2_1_1"] = st.text_input("기술/제품명 불일치", value=st.session_state.templates["s2_1_1"])
     
-    # 다크모드 완벽 대응 구분선 (currentColor 사용)
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">', unsafe_allow_html=True)
     
     st.markdown("**2. 기술 및 제품 전용**")
@@ -122,7 +116,6 @@ def show_settings_modal():
 
 # --- 6. 사이드바 상단 구성 ---
 with st.sidebar:
-    # 다크/라이트 모드 자동 대응 홈버튼 및 선 (currentColor 사용)
     st.markdown(
         '''
         <div style="margin-top: 5px;">
@@ -141,7 +134,7 @@ with st.sidebar:
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# 상단 필터 (3가지 유형으로 확장)
+# 상단 필터 (3가지 유형)
 st.markdown("### 📌 검토 유형")
 global_type = st.radio(
     "검토 유형 선택", 
@@ -158,7 +151,6 @@ results = []
 total_errors = 0
 tpl = st.session_state.templates
 
-# 녹색전문기업일 경우 빈 화면 렌더링
 if global_type == "company":
     st.info("🏢 녹색전문기업 검토 체크리스트는 추후 업데이트 예정입니다.")
 else:
@@ -266,11 +258,12 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    # 복사 버튼이 자동으로 생성되는 st.code 영역 (CSS로 크기 최적화됨)
-    st.code(final_output, language="text")
+    # 시원한 텍스트 박스로 원복 완료!
+    st.text_area("결과 복사 (클릭 후 Ctrl+A, Ctrl+C)", value=final_output, height=400, label_visibility="collapsed")
     
-    # on_click 콜백을 사용하여 세션을 화면 렌더링 전에 완벽하게 초기화
-    st.button("🔄 초기화", use_container_width=True, on_click=clear_form)
+    # st.rerun() 없이 on_click 콜백만 사용하여 세션을 확실하게 날려버립니다.
+    if st.button("🔄 전체 초기화", use_container_width=True, on_click=clear_form):
+        pass # 콜백이 모든 것을 해결합니다.
         
     if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
         show_settings_modal()
