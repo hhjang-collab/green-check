@@ -249,7 +249,7 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=350, label_visibility="collapsed")
+    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=325, label_visibility="collapsed")
     
     # 텍스트 에어리어와 버튼 사이의 가로선 제거됨
     
