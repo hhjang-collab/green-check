@@ -107,7 +107,7 @@ def show_settings_modal():
     if st.button("저장 후 닫기", use_container_width=True):
         st.rerun()
 
-# --- 6. 사이드바 구성 (설정 버튼 메인으로 이동) ---
+# --- 6. 사이드바 구성 ---
 with st.sidebar:
     st.markdown(
         '''
@@ -121,27 +121,20 @@ with st.sidebar:
         unsafe_allow_html=True
     )
     
-    st.subheader("📝 보완 요청 내용")
-    # 추후 계산될 total_errors를 위해 빈 자리(placeholder)를 확보합니다.
-    error_count_placeholder = st.empty()
-    
-    # 텍스트 에어리어는 하단에서 최종 결과를 모아 업데이트합니다.
+    # 설정 모달을 사이드바 버튼으로 호출
+    if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
+        show_settings_modal()
+        
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
+# 상단 필터 (녹색기술 vs 녹색제품)
+st.markdown("### 📌 검토 유형")
+global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
+
 # 얇은 여백 구분선 (공통 필수 규칙 7)
-st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-
-# 상단 필터 및 설정 버튼 (제목 제거 후 우측 정렬 배치)
-col_type, col_settings = st.columns([7, 3])
-with col_type:
-    global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
-with col_settings:
-    if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
-        show_settings_modal()
-
-# 얇은 여백 구분선
 st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
 st.subheader("✅ 검토 체크리스트")
@@ -247,9 +240,9 @@ else:
             results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
 
 # --- 8. 사이드바 하단 (결과 출력 및 초기화) ---
-# 메인 로직 처리 후 사이드바에 결과를 렌더링합니다.
 with st.sidebar:
-    error_count_placeholder.info(f"💡 발견된 보완사항: **{total_errors}개**")
+    st.subheader("📝 보완 요청 내용")
+    st.info(f"💡 발견된 보완사항: **{total_errors}개**")
     
     final_output = "\n\n".join(results)
     if not final_output:
