@@ -1,29 +1,105 @@
+# app.py
 import streamlit as st
+import base64
+import os
 
-# --- 페이지 기본 설정 ---
-st.set_page_config(page_title="녹색인증 서류 검토 Agent PRO", layout="wide", initial_sidebar_state="expanded")
+# --- 1. 페이지 기본 설정 (공통 필수 규칙 2) ---
+st.set_page_config(page_title="녹색인증 서류 검토 Agent PRO", layout="centered", initial_sidebar_state="expanded")
+
+# --- 2. 보안 (비밀번호) 로직 (공통 필수 규칙 3) ---
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    st.title("🔒 사내 시스템 로그인")
+    # ⚠️ [수정 필요] .streamlit/secrets.toml 파일에 APP_PASSWORD="여기에비밀번호" 를 설정해야 합니다.
+    user_pwd = st.text_input("접근 비밀번호를 입력하세요", type="password")
+    if st.button("로그인", use_container_width=True):
+        if user_pwd == st.secrets.get("APP_PASSWORD"):
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("비밀번호가 일치하지 않습니다.")
+    st.stop() # 로그인 전에는 아래 메인 화면이 렌더링되지 않음
+
+# --- 3. UI 최적화 및 회사 로고 설정 (공통 필수 규칙 4, 6) ---
+def get_base64_of_bin_file(bin_file):
+    if os.path.exists(bin_file):
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    return ""
+
+# ⚠️ [수정 필요] 실제 로고 파일 경로로 맞추어 주세요. 파일이 없으면 빈 문자열을 반환하여 에러를 방지합니다.
+logo_base64 = get_base64_of_bin_file("company_logo.png") 
+
+st.markdown(f"""
+<style>
+    /* 입력창 하단 불필요한 안내 문구 숨김 */
+    [data-testid="InputInstructions"] {{display: none !important;}}
+    
+    /* 우측 상단 회사 로고 고정 */
+    .company-logo {{
+        position: fixed;
+        top: 70px;
+        right: 30px;
+        width: 120px;
+        z-index: 1000;
+    }}
+    /* 모바일 환경 대응 */
+    @media (max-width: 768px) {{
+        .company-logo {{
+            top: 20px;
+            right: 20px;
+            width: 80px;
+        }}
+    }}
+</style>
+<img src="data:image/png;base64,{logo_base64}" class="company-logo">
+""", unsafe_allow_html=True)
+
+# --- 4. 사이드바: 홈 버튼 및 얇은 여백 구분선 (공통 필수 규칙 5, 7) ---
+with st.sidebar:
+    st.markdown(
+        '''
+        <div style="margin-top: 5px;">
+            <a href="https://ip2b-work-tools.streamlit.app/" target="_blank" style="text-decoration: none; color: #31333F; font-size: 15px; font-weight: 600;">
+                🏠 홈으로
+            </a>
+        </div>
+        <hr style="margin-top: 10px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">
+        ''', 
+        unsafe_allow_html=True
+    )
+    st.caption("사내 업무용 도구 모음")
 
 # --- 상태 초기화 함수 ---
 def clear_form():
-    for key in st.session_state.keys():
-        del st.session_state[key]
+    # authenticated 상태는 유지하면서 나머지 폼 데이터만 초기화
+    for key in list(st.session_state.keys()):
+        if key != "authenticated":
+            del st.session_state[key]
 
+# --- 메인 화면 시작 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# --- 1. 상단 필터 (녹색기술 vs 녹색제품) ---
+# 상단 필터 (녹색기술 vs 녹색제품)
 st.markdown("### 📌 검토 유형")
 global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
 
-st.divider()
+# 얇은 여백 구분선 (공통 필수 규칙 7)
+st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
-col_left, col_right = st.columns([6, 4])
+# 레이아웃을 centered로 변경했으므로, 기존 col_left, col_right 비율을 조금 조정하거나 세로로 배치할 수 있지만
+# 우선 기존 구조를 유지하여 화면을 분할합니다.
+col_left, col_right = st.columns([5, 5])
 
-# --- 결과 취합용 변수 ---
+# 결과 취합용 변수
 results = []
 total_errors = 0
 
 with col_left:
-    st.subheader("✅ 검토 체크리스트 (오류/미제출 항목 체크)")
+    st.subheader("✅ 검토 체크리스트")
 
     # [1. 기업 정보 (공통)]
     with st.expander("1. 기업 정보 확인", expanded=True):
@@ -58,22 +134,22 @@ with col_left:
             sec2_errors.append("- 요약서의 기술명(또는 제품명)이 시스템 신청 정보와 일치하지 않습니다."); total_errors += 1
         
         st.markdown("**2-2. 1p 요약서 내용 불일치**")
-        cols2_2 = st.columns(4)
+        cols2_2 = st.columns(2)
         if cols2_2[0].checkbox("분류체계", key="s2_2_1"): sec2_errors.append("- 요약서: 분류체계 내용이 시스템과 불일치합니다."); total_errors += 1
         if cols2_2[1].checkbox("분류코드", key="s2_2_2"): sec2_errors.append("- 요약서: 분류코드 내용이 시스템과 불일치합니다."); total_errors += 1
-        if cols2_2[2].checkbox("핵심요소기술", key="s2_2_3"): sec2_errors.append("- 요약서: 핵심요소기술 내용이 시스템과 불일치합니다."); total_errors += 1
-        if cols2_2[3].checkbox("기술수준", key="s2_2_4"): sec2_errors.append("- 요약서: 기술수준 내용이 시스템과 불일치합니다."); total_errors += 1
+        if cols2_2[0].checkbox("핵심요소기술", key="s2_2_3"): sec2_errors.append("- 요약서: 핵심요소기술 내용이 시스템과 불일치합니다."); total_errors += 1
+        if cols2_2[1].checkbox("기술수준", key="s2_2_4"): sec2_errors.append("- 요약서: 기술수준 내용이 시스템과 불일치합니다."); total_errors += 1
 
         st.markdown("**2-3. 목차 누락 (해당 번호 클릭)**")
-        # 유형에 따른 목차 구성
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod":
-            toc_items.insert(3, "1-4") # 녹색제품일 경우 1-4 추가
+            toc_items.insert(3, "1-4")
             
         missing_tocs = []
-        cols2_3 = st.columns(6)
+        # Centered 레이아웃에 맞춰 체크박스 열 개수 조정
+        cols2_3 = st.columns(4) 
         for idx, toc in enumerate(toc_items):
-            if cols2_3[idx % 6].checkbox(f"({toc})", key=f"toc_{toc}"):
+            if cols2_3[idx % 4].checkbox(f"({toc})", key=f"toc_{toc}"):
                 missing_tocs.append(toc)
                 total_errors += 1
                 
@@ -83,7 +159,7 @@ with col_left:
         if sec2_errors:
             results.append("[설명서 보완]\n" + "\n".join(sec2_errors))
 
-    # --- 3. 녹색기술 전용 섹션 ---
+    # [3, 4. 녹색기술 전용 섹션]
     if global_type == "tech":
         with st.expander("3. 지식재산권 확인 (녹색기술)", expanded=True):
             sec3_errors = []
@@ -91,8 +167,7 @@ with col_left:
                 sec3_errors.append("- 출원 또는 공개 상태가 아닌 등록 완료된 특허로 제출해 주시기 바랍니다."); total_errors += 1
             if st.checkbox("특허등록원부 미제출", key="s3_2"):
                 sec3_errors.append("- 등록된 특허기술의 '특허등록원부'를 제출해 주시기 바랍니다."); total_errors += 1
-            
-            if st.checkbox("공동권리자 존재 및 지재권 활용동의서 미제출", key="s3_3"):
+            if st.checkbox("공동권리자 존재 및 동의서 미제출", key="s3_3"):
                 sec3_errors.append("- 최종권리자가 타기업 또는 다수인 경우, 공동권리자의 '지식재산권 활용 동의서'를 작성해 주셔야 합니다."); total_errors += 1
                 
             if sec3_errors:
@@ -105,20 +180,19 @@ with col_left:
                 if ans == "아니오":
                     sec4_errors.append("- 공인된 외부기관(KOLAS 등)의 시험성적서를 제출하거나, 자체/의뢰자 제시 성적서일 경우 반드시 '사유서'를 함께 제출해 주시기 바랍니다.")
                     total_errors += 1
-                    
             if st.checkbox("신청 기업 명의 불일치", key="s4_2"):
                 sec4_errors.append("- 시험성적서 상의 의뢰인(기업) 명의가 신청 업체와 일치해야 합니다."); total_errors += 1
                 
             if sec4_errors:
                 results.append("[시험성적서 보완]\n" + "\n".join(sec4_errors))
 
-    # --- 4. 녹색제품 전용 섹션 ---
+    # [3. 녹색제품 전용 섹션]
     else:
         with st.expander("3. 제품 관련 서류 확인 (녹색제품)", expanded=True):
             sec5_errors = []
             if st.checkbox("품질경영인증 미제출", key="s5_1"):
                 sec5_errors.append("- 품질경영 증빙은 KS 인증 또는 ISO 인증(ISO 9001/14001 등) 서류로 준비하여 제출해 주셔야 합니다."); total_errors += 1
-            if st.checkbox("생산현장 증빙 미제출 (공장등록증, 직접생산 등)", key="s5_2"):
+            if st.checkbox("생산현장 증빙 미제출", key="s5_2"):
                 sec5_errors.append("- 공장등록증, 직접생산확인서 또는 생산현장증빙서류(OEM계약서 및 세금계산서 등)를 첨부하여 주시기 바랍니다."); total_errors += 1
                 
             if sec5_errors:
@@ -134,6 +208,9 @@ with col_right:
         final_output = "왼쪽 체크리스트에서 미제출 또는 오류 항목을 선택하면\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
     st.text_area("결과 복사 영역 (클릭 후 Ctrl+A, Ctrl+C)", value=final_output, height=500, label_visibility="collapsed")
+    
+    # 얇은 여백 구분선 적용
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
     if st.button("🔄 새로운 서류 검토하기 (초기화)", use_container_width=True):
         clear_form()
