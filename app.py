@@ -102,7 +102,8 @@ def show_settings_modal():
     st.session_state.templates["corpReg_indiv"] = st.text_input("개인사업자등록증 관련", value=st.session_state.templates["corpReg_indiv"])
     st.session_state.templates["s2_1_1"] = st.text_input("기술/제품명 불일치", value=st.session_state.templates["s2_1_1"])
     
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+    # 다크모드 대응 얇은 선
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid var(--text-color); opacity: 0.2;">', unsafe_allow_html=True)
     
     st.markdown("**2. 기술 및 제품 전용**")
     st.session_state.templates["s3_1"] = st.text_input("[기술] 특허 상태(출원/공개)", value=st.session_state.templates["s3_1"])
@@ -115,14 +116,15 @@ def show_settings_modal():
 
 # --- 6. 사이드바 상단 구성 ---
 with st.sidebar:
+    # 다크/라이트 모드 자동 대응 (var(--text-color) 사용)
     st.markdown(
         '''
         <div style="margin-top: 5px;">
-            <a href="https://ip2b-work-tools.streamlit.app/" target="_blank" style="text-decoration: none; color: #31333F; font-size: 15px; font-weight: 600;">
+            <a href="https://ip2b-work-tools.streamlit.app/" target="_blank" style="text-decoration: none; color: var(--text-color); font-size: 15px; font-weight: 600;">
                 🏠 홈으로
             </a>
         </div>
-        <hr style="margin-top: 10px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">
+        <hr style="margin-top: 10px; margin-bottom: 15px; border: 0; border-top: 1px solid var(--text-color); opacity: 0.2;">
         ''', 
         unsafe_allow_html=True
     )
@@ -133,11 +135,10 @@ with st.sidebar:
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# 불필요한 가로선 제거됨
+# 상단 필터
 st.markdown("### 📌 검토 유형")
 global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
 
-# 불필요한 가로선 제거됨
 st.subheader("✅ 검토 체크리스트")
 
 results = []
@@ -250,7 +251,8 @@ with st.sidebar:
         
     st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=300, label_visibility="collapsed")
     
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+    # 다크모드 대응 얇은 선
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid var(--text-color); opacity: 0.2;">', unsafe_allow_html=True)
     
     if st.button("🔄 초기화", use_container_width=True):
         clear_form()
