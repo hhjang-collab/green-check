@@ -107,7 +107,7 @@ def show_settings_modal():
     if st.button("저장 후 닫기", use_container_width=True):
         st.rerun()
 
-# --- 6. 사이드바 구성 ---
+# --- 6. 사이드바 상단 구성 ---
 with st.sidebar:
     st.markdown(
         '''
@@ -121,20 +121,20 @@ with st.sidebar:
         unsafe_allow_html=True
     )
     
-    # 설정 모달을 사이드바 버튼으로 호출
-    if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
-        show_settings_modal()
-        
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+    st.subheader("📝 보완 요청 내용")
+    # 추후 계산될 total_errors를 위해 빈 자리(placeholder)를 확보합니다.
+    error_count_placeholder = st.empty()
 
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# 상단 필터 (녹색기술 vs 녹색제품)
-st.markdown("### 📌 검토 유형")
+# 얇은 여백 구분선 (공통 필수 규칙 7)
+st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+
+# 상단 필터 (군더더기 텍스트 제거하고 라디오 버튼만 배치)
 global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
 
-# 얇은 여백 구분선 (공통 필수 규칙 7)
+# 얇은 여백 구분선
 st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
 st.subheader("✅ 검토 체크리스트")
@@ -239,19 +239,25 @@ else:
         if sec5_errors:
             results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
 
-# --- 8. 사이드바 하단 (결과 출력 및 초기화) ---
+# --- 8. 사이드바 하단 (결과 출력 및 버튼들) ---
+# 메인 로직 처리 후 사이드바에 결과를 렌더링합니다.
 with st.sidebar:
-    st.subheader("📝 보완 요청 내용")
-    st.info(f"💡 발견된 보완사항: **{total_errors}개**")
+    error_count_placeholder.info(f"💡 발견된 보완사항: **{total_errors}개**")
     
     final_output = "\n\n".join(results)
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=450, label_visibility="collapsed")
+    # 텍스트 창 높이를 450에서 300으로 줄임
+    st.text_area("결과 복사 (Ctrl+A, Ctrl+C)", value=final_output, height=300, label_visibility="collapsed")
     
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
-    if st.button("🔄 초기화 및 새 검토", use_container_width=True):
+    # 초기화 버튼
+    if st.button("🔄 초기화", use_container_width=True):
         clear_form()
         st.rerun()
+        
+    # 설정 버튼 (초기화 바로 밑에 배치)
+    if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
+        show_settings_modal()
