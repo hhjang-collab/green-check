@@ -133,16 +133,11 @@ with st.sidebar:
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# 얇은 여백 구분선 (공통 필수 규칙 7)
-st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-
-# 상단 필터
+# 불필요한 가로선 제거됨
 st.markdown("### 📌 검토 유형")
 global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
 
-# 얇은 여백 구분선
-st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-
+# 불필요한 가로선 제거됨
 st.subheader("✅ 검토 체크리스트")
 
 results = []
