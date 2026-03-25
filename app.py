@@ -1,28 +1,40 @@
-# app.py
 import streamlit as st
+import pandas as pd
 import base64
 import os
+from datetime import datetime
 
-# --- 1. 페이지 기본 설정 (공통 필수 규칙 2) ---
-st.set_page_config(page_title="녹색인증 서류 검토 Agent PRO", layout="centered", initial_sidebar_state="expanded")
+# 1. 페이지 기본 설정 (공통 필수 규칙 2)
+st.set_page_config(page_title="지출결의서 작성 앱", layout="centered")
 
-# --- 2. 보안 (비밀번호) 로직 (공통 필수 규칙 3) ---
+# 2. UI 최적화 CSS (공통 필수 규칙 6)
+st.markdown("""
+    <style>
+        [data-testid="InputInstructions"] {display: none !important;}
+    </style>
+""", unsafe_allow_html=True)
+
+# 3. 보안 (비밀번호) 로그인 로직 (공통 필수 규칙 3)
+# [주의] .streamlit/secrets.toml 파일에 APP_PASSWORD = "설정한비밀번호" 를 입력해야 합니다.
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
-    st.title("🔒 사내 시스템 로그인")
-    # ⚠️ [수정 필요] .streamlit/secrets.toml 파일에 APP_PASSWORD="여기에비밀번호" 를 설정해야 합니다.
-    user_pwd = st.text_input("접근 비밀번호를 입력하세요", type="password")
-    if st.button("로그인", use_container_width=True):
-        if user_pwd == st.secrets.get("APP_PASSWORD"):
+    st.title("🔒 로그인")
+    st.markdown("사내 업무용 시스템입니다. 비밀번호를 입력해주세요.")
+    pwd_input = st.text_input("비밀번호", type="password")
+    
+    if st.button("로그인"):
+        # secrets에 APP_PASSWORD가 없을 경우를 대비해 기본값도 임시 처리 (실제 배포시 주의)
+        correct_password = st.secrets.get("APP_PASSWORD", "1234") 
+        if pwd_input == correct_password:
             st.session_state["authenticated"] = True
             st.rerun()
         else:
             st.error("비밀번호가 일치하지 않습니다.")
-    st.stop() # 로그인 전에는 아래 메인 화면이 렌더링되지 않음
+    st.stop() # 로그인 전에는 아래 메인 화면 코드가 실행되지 않음
 
-# --- 3. UI 최적화 및 회사 로고 설정 (공통 필수 규칙 4, 6) ---
+# 4. 회사 로고 (우측 상단 고정) (공통 필수 규칙 4)
 def get_base64_of_bin_file(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -30,35 +42,30 @@ def get_base64_of_bin_file(bin_file):
         return base64.b64encode(data).decode()
     return ""
 
-# ⚠️ [수정 필요] 실제 로고 파일 경로로 맞추어 주세요. 파일이 없으면 빈 문자열을 반환하여 에러를 방지합니다.
-logo_base64 = get_base64_of_bin_file("company_logo.png") 
+# [주의] 앱과 같은 경로에 "company_logo.png" 파일을 업로드해 두어야 합니다.
+logo_base64 = get_base64_of_bin_file("company_logo.png")
+if logo_base64:
+    st.markdown(f"""
+        <style>
+            .fixed-logo {{
+                position: fixed;
+                top: 70px;
+                right: 30px;
+                z-index: 999;
+                width: 120px;
+            }}
+            @media (max-width: 768px) {{
+                .fixed-logo {{
+                    top: 15px;
+                    right: 15px;
+                    width: 80px;
+                }}
+            }}
+        </style>
+        <img src="data:image/png;base64,{logo_base64}" class="fixed-logo">
+    """, unsafe_allow_html=True)
 
-st.markdown(f"""
-<style>
-    /* 입력창 하단 불필요한 안내 문구 숨김 */
-    [data-testid="InputInstructions"] {{display: none !important;}}
-    
-    /* 우측 상단 회사 로고 고정 */
-    .company-logo {{
-        position: fixed;
-        top: 70px;
-        right: 30px;
-        width: 120px;
-        z-index: 1000;
-    }}
-    /* 모바일 환경 대응 */
-    @media (max-width: 768px) {{
-        .company-logo {{
-            top: 20px;
-            right: 20px;
-            width: 80px;
-        }}
-    }}
-</style>
-<img src="data:image/png;base64,{logo_base64}" class="company-logo">
-""", unsafe_allow_html=True)
-
-# --- 4. 사이드바: 홈 버튼 및 얇은 여백 구분선 (공통 필수 규칙 5, 7) ---
+# 5. 홈 버튼 (포털 복귀) 및 얇은 여백 구분선 (공통 필수 규칙 5)
 with st.sidebar:
     st.markdown(
         '''
@@ -71,147 +78,80 @@ with st.sidebar:
         ''', 
         unsafe_allow_html=True
     )
-    st.caption("사내 업무용 도구 모음")
+    st.markdown("### 📝 지출결의 메뉴")
+    st.button("신규 작성", use_container_width=True)
+    st.button("작성 내역 조회", use_container_width=True)
 
-# --- 상태 초기화 함수 ---
-def clear_form():
-    # authenticated 상태는 유지하면서 나머지 폼 데이터만 초기화
-    for key in list(st.session_state.keys()):
-        if key != "authenticated":
-            del st.session_state[key]
-
-# --- 메인 화면 시작 ---
-st.title("🔍 녹색인증 서류검토 Agent PRO")
-
-# 상단 필터 (녹색기술 vs 녹색제품)
-st.markdown("### 📌 검토 유형")
-global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
-
-# 얇은 여백 구분선 (공통 필수 규칙 7)
-st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-
-# 레이아웃을 centered로 변경했으므로, 기존 col_left, col_right 비율을 조금 조정하거나 세로로 배치할 수 있지만
-# 우선 기존 구조를 유지하여 화면을 분할합니다.
-col_left, col_right = st.columns([5, 5])
-
-# 결과 취합용 변수
-results = []
-total_errors = 0
-
-with col_left:
-    st.subheader("✅ 검토 체크리스트")
-
-    # [1. 기업 정보 (공통)]
-    with st.expander("1. 기업 정보 확인", expanded=True):
-        sec1_errors = []
-        
-        if st.checkbox("대표자명 불일치", key="ceoName"):
-            sec1_errors.append("- 제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.")
-            total_errors += 1
-            
-        if st.checkbox("법인등기부등본 / 사업자등록증 관련 오류", key="corpReg"):
-            is_indiv = st.radio("해당 기업이 개인사업자인가요?", ["선택 안됨", "예(개인)", "아니오(법인)"], horizontal=True)
-            
-            if is_indiv == "아니오(법인)":
-                sec1_errors.append("- 법인등기부등본(최근 3개월 이내 발행본, 제출용)을 첨부하여 주시기 바랍니다.")
-                total_errors += 1
-            elif is_indiv == "예(개인)":
-                is_recent = st.radio("사업자등록증이 최근 3개월 이내 발행본인가요?", ["선택 안됨", "예", "아니오"], horizontal=True)
-                if is_recent == "아니오":
-                    sec1_errors.append("- 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.")
-                    total_errors += 1
-                    
-        if sec1_errors:
-            results.append("[기업 정보 보완]\n" + "\n".join(sec1_errors))
-
-    # [2. 기술/제품 설명서 (공통)]
-    with st.expander("2. 설명서 확인", expanded=True):
-        sec2_errors = []
-        
-        st.markdown("**2-1. 시스템 정보 불일치**")
-        cols2_1 = st.columns(2)
-        if cols2_1[0].checkbox("기술명/제품명 불일치", key="s2_1_1"): 
-            sec2_errors.append("- 요약서의 기술명(또는 제품명)이 시스템 신청 정보와 일치하지 않습니다."); total_errors += 1
-        
-        st.markdown("**2-2. 1p 요약서 내용 불일치**")
-        cols2_2 = st.columns(2)
-        if cols2_2[0].checkbox("분류체계", key="s2_2_1"): sec2_errors.append("- 요약서: 분류체계 내용이 시스템과 불일치합니다."); total_errors += 1
-        if cols2_2[1].checkbox("분류코드", key="s2_2_2"): sec2_errors.append("- 요약서: 분류코드 내용이 시스템과 불일치합니다."); total_errors += 1
-        if cols2_2[0].checkbox("핵심요소기술", key="s2_2_3"): sec2_errors.append("- 요약서: 핵심요소기술 내용이 시스템과 불일치합니다."); total_errors += 1
-        if cols2_2[1].checkbox("기술수준", key="s2_2_4"): sec2_errors.append("- 요약서: 기술수준 내용이 시스템과 불일치합니다."); total_errors += 1
-
-        st.markdown("**2-3. 목차 누락 (해당 번호 클릭)**")
-        toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
-        if global_type == "prod":
-            toc_items.insert(3, "1-4")
-            
-        missing_tocs = []
-        # Centered 레이아웃에 맞춰 체크박스 열 개수 조정
-        cols2_3 = st.columns(4) 
-        for idx, toc in enumerate(toc_items):
-            if cols2_3[idx % 4].checkbox(f"({toc})", key=f"toc_{toc}"):
-                missing_tocs.append(toc)
-                total_errors += 1
-                
-        if missing_tocs:
-            sec2_errors.append(f"- 설명서 내용 누락: 서식자료실 양식을 준수하여 세부 항목({', '.join(missing_tocs)})을 작성해 주시기 바랍니다.")
-            
-        if sec2_errors:
-            results.append("[설명서 보완]\n" + "\n".join(sec2_errors))
-
-    # [3, 4. 녹색기술 전용 섹션]
-    if global_type == "tech":
-        with st.expander("3. 지식재산권 확인 (녹색기술)", expanded=True):
-            sec3_errors = []
-            if st.checkbox("등록 특허가 아님 (출원/공개 상태)", key="s3_1"):
-                sec3_errors.append("- 출원 또는 공개 상태가 아닌 등록 완료된 특허로 제출해 주시기 바랍니다."); total_errors += 1
-            if st.checkbox("특허등록원부 미제출", key="s3_2"):
-                sec3_errors.append("- 등록된 특허기술의 '특허등록원부'를 제출해 주시기 바랍니다."); total_errors += 1
-            if st.checkbox("공동권리자 존재 및 동의서 미제출", key="s3_3"):
-                sec3_errors.append("- 최종권리자가 타기업 또는 다수인 경우, 공동권리자의 '지식재산권 활용 동의서'를 작성해 주셔야 합니다."); total_errors += 1
-                
-            if sec3_errors:
-                results.append("[지식재산권 보완]\n" + "\n".join(sec3_errors))
-
-        with st.expander("4. 시험성적서 확인 (녹색기술)", expanded=True):
-            sec4_errors = []
-            if st.checkbox("공인기관성적서 미제출", key="s4_1"):
-                ans = st.radio("자체시험성적서 및 사유서를 대신 제출했나요?", ["선택 안됨", "예", "아니오"], horizontal=True)
-                if ans == "아니오":
-                    sec4_errors.append("- 공인된 외부기관(KOLAS 등)의 시험성적서를 제출하거나, 자체/의뢰자 제시 성적서일 경우 반드시 '사유서'를 함께 제출해 주시기 바랍니다.")
-                    total_errors += 1
-            if st.checkbox("신청 기업 명의 불일치", key="s4_2"):
-                sec4_errors.append("- 시험성적서 상의 의뢰인(기업) 명의가 신청 업체와 일치해야 합니다."); total_errors += 1
-                
-            if sec4_errors:
-                results.append("[시험성적서 보완]\n" + "\n".join(sec4_errors))
-
-    # [3. 녹색제품 전용 섹션]
-    else:
-        with st.expander("3. 제품 관련 서류 확인 (녹색제품)", expanded=True):
-            sec5_errors = []
-            if st.checkbox("품질경영인증 미제출", key="s5_1"):
-                sec5_errors.append("- 품질경영 증빙은 KS 인증 또는 ISO 인증(ISO 9001/14001 등) 서류로 준비하여 제출해 주셔야 합니다."); total_errors += 1
-            if st.checkbox("생산현장 증빙 미제출", key="s5_2"):
-                sec5_errors.append("- 공장등록증, 직접생산확인서 또는 생산현장증빙서류(OEM계약서 및 세금계산서 등)를 첨부하여 주시기 바랍니다."); total_errors += 1
-                
-            if sec5_errors:
-                results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
-
-with col_right:
-    st.subheader("📝 종합 보완 요청서")
-    
-    st.info(f"💡 현재 발견된 보완사항: **{total_errors}개**")
-    
-    final_output = "\n\n".join(results)
-    if not final_output:
-        final_output = "왼쪽 체크리스트에서 미제출 또는 오류 항목을 선택하면\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
-        
-    st.text_area("결과 복사 영역 (클릭 후 Ctrl+A, Ctrl+C)", value=final_output, height=500, label_visibility="collapsed")
-    
-    # 얇은 여백 구분선 적용
+# 6. 여백이 얇은 구분선 함수화 (공통 필수 규칙 7 적용을 위함)
+def thin_divider():
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+
+# --- 메인 화면 로직 ---
+st.title("📄 지출결의서 작성")
+thin_divider()
+
+# 첨부해주신 데이터를 기반으로 한 선택지 더미 데이터
+PROJECT_LIST = ["선택", "전북 군산산단 AX마스터플랜 수립 연구", "상주시-글로컬", "KEITI-중소환경", "NIPA-SW인재"]
+ACCOUNT_LIST = ["선택", "출장비", "회의비", "복리후생비"]
+SUMMARY_LIST = ["식대", "다과비", "교통비(KTX)", "교통비(카셰어링)", "주유비", "숙박비"]
+PAYMENT_METHODS = ["현금", "계좌이체", "법인카드", "개인카드", "복합결제", "사업비카드"]
+ATTACHMENTS = ["매출전표", "세금계산서", "현금영수증"]
+
+# 기본 정보 입력 영역
+col1, col2 = st.columns(2)
+with col1:
+    project = st.selectbox("프로젝트", PROJECT_LIST)
+    department = st.text_input("부서", value="기술사업화팀")
+    author = st.text_input("작성자")
+    account = st.selectbox("계정과목", ACCOUNT_LIST)
+
+with col2:
+    purpose = st.text_input("목적", value="용역착수보고회 참석")
+    title = st.text_input("직위", value="대리")
+    date = st.date_input("작성일", datetime.today())
     
-    if st.button("🔄 새로운 서류 검토하기 (초기화)", use_container_width=True):
-        clear_form()
-        st.rerun()
+thin_divider()
+
+st.subheader("💳 지출 내역 상세")
+
+# 지출 내역 데이터프레임 초기화
+if "expense_data" not in st.session_state:
+    st.session_state["expense_data"] = pd.DataFrame(
+        [
+            {"지출일": datetime.today().date(), "적요": "교통비(KTX)", "지급처": "한국철도공사", "금액": 0, "결제구분": "법인카드", "첨부": "매출전표", "비고": ""},
+        ]
+    )
+
+# st.data_editor를 사용하여 표 형태로 입력받기
+edited_df = st.data_editor(
+    st.session_state["expense_data"],
+    column_config={
+        "지출일": st.column_config.DateColumn("지출일", required=True),
+        "적요": st.column_config.SelectboxColumn("적요", options=SUMMARY_LIST, required=True),
+        "지급처": st.column_config.TextColumn("지급처", required=True),
+        "금액": st.column_config.NumberColumn("금액", min_value=0, step=1000, required=True, format="%d 원"),
+        "결제구분": st.column_config.SelectboxColumn("결제구분", options=PAYMENT_METHODS, required=True),
+        "첨부": st.column_config.SelectboxColumn("첨부", options=ATTACHMENTS, required=True),
+        "비고": st.column_config.TextColumn("비고"),
+    },
+    num_rows="dynamic",
+    use_container_width=True,
+    hide_index=True
+)
+
+total_amount = edited_df["금액"].sum()
+st.markdown(f"**총 지출 금액: <span style='color:#e74c3c;'>{total_amount:,} 원</span>**", unsafe_allow_html=True)
+
+thin_divider()
+
+# 다운로드 영역 (기능 추가를 위한 틀)
+st.subheader("📥 문서 출력")
+st.info("💡 엑셀 및 날인이 포함된 PDF 다운로드 기능은 파일 양식 세부 매핑 후 추가될 예정입니다.")
+
+col_down1, col_down2, col_down3 = st.columns([1, 1, 2])
+with col_down1:
+    if st.button("📊 엑셀 다운로드", use_container_width=True):
+        st.toast("엑셀 생성 로직을 개발해야 합니다.", icon="⚙️")
+with col_down2:
+    if st.button("📑 PDF 다운로드 (날인포함)", use_container_width=True):
+        st.toast("PDF 생성 및 도장 이미지 합성 로직을 개발해야 합니다.", icon="⚙️")
