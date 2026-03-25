@@ -30,7 +30,7 @@ def get_base64_of_bin_file(bin_file):
         return base64.b64encode(data).decode()
     return ""
 
-# ⚠️ [수정 필요] 실제 로고 파일 경로로 맞추어 주세요. 파일이 없으면 빈 문자열 반환.
+# ⚠️ [수정 필요] 실제 로고 파일 경로로 맞추어 주세요.
 logo_base64 = get_base64_of_bin_file("company_logo.png") 
 
 st.markdown(f"""
@@ -81,12 +81,33 @@ if "templates" not in st.session_state:
     st.session_state["templates"] = default_templates.copy()
 
 def clear_form():
-    # 인증 상태와 템플릿 설정값은 유지하면서 화면의 입력 폼만 초기화
     for key in list(st.session_state.keys()):
         if key not in ["authenticated", "templates"]:
             del st.session_state[key]
 
-# --- 5. 사이드바 상단 (홈 버튼) ---
+# --- 5. 팝업창 (모달) UI 정의 ---
+@st.dialog("⚙️ 보완 요청 문구 설정")
+def show_settings_modal():
+    st.caption("체크리스트 선택 시 자동 입력되는 문구를 회사 양식에 맞게 수정하세요. (팝업창 밖을 클릭하거나 '저장 후 닫기'를 누르면 반영됩니다)")
+    
+    st.markdown("**1. 기업 및 설명서 공통**")
+    st.session_state.templates["ceoName"] = st.text_input("대표자명 불일치", value=st.session_state.templates["ceoName"])
+    st.session_state.templates["corpReg_corp"] = st.text_input("법인등기부등본 관련", value=st.session_state.templates["corpReg_corp"])
+    st.session_state.templates["corpReg_indiv"] = st.text_input("개인사업자등록증 관련", value=st.session_state.templates["corpReg_indiv"])
+    st.session_state.templates["s2_1_1"] = st.text_input("기술/제품명 불일치", value=st.session_state.templates["s2_1_1"])
+    
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+    
+    st.markdown("**2. 기술 및 제품 전용**")
+    st.session_state.templates["s3_1"] = st.text_input("[기술] 특허 상태(출원/공개)", value=st.session_state.templates["s3_1"])
+    st.session_state.templates["s4_1"] = st.text_input("[기술] 시험성적서 미제출", value=st.session_state.templates["s4_1"])
+    st.session_state.templates["s5_1"] = st.text_input("[제품] 품질경영인증 미제출", value=st.session_state.templates["s5_1"])
+    st.session_state.templates["s5_2"] = st.text_input("[제품] 생산현장 증빙 미제출", value=st.session_state.templates["s5_2"])
+    
+    if st.button("저장 후 닫기", use_container_width=True):
+        st.rerun()
+
+# --- 6. 사이드바 구성 ---
 with st.sidebar:
     st.markdown(
         '''
@@ -99,46 +120,28 @@ with st.sidebar:
         ''', 
         unsafe_allow_html=True
     )
-
-# --- 6. 메인 화면 ---
-st.title("🔍 녹색인증 서류검토 Agent PRO")
-
-# [설정] 템플릿 직접 수정 아코디언
-with st.expander("⚙️ 보완 요청 문구 설정 (클릭하여 수정)"):
-    st.caption("체크리스트 선택 시 자동 입력되는 문구를 우리 회사 양식에 맞게 수정할 수 있습니다.")
     
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        st.markdown("**기업/설명서 공통**")
-        st.session_state.templates["ceoName"] = st.text_input("대표자명 불일치", value=st.session_state.templates["ceoName"])
-        st.session_state.templates["corpReg_corp"] = st.text_input("법인등기부등본 관련", value=st.session_state.templates["corpReg_corp"])
-        st.session_state.templates["corpReg_indiv"] = st.text_input("개인사업자등록증 관련", value=st.session_state.templates["corpReg_indiv"])
-        st.session_state.templates["s2_1_1"] = st.text_input("기술/제품명 불일치", value=st.session_state.templates["s2_1_1"])
-        st.session_state.templates["s2_2_1"] = st.text_input("분류체계 불일치", value=st.session_state.templates["s2_2_1"])
-        st.session_state.templates["s2_2_2"] = st.text_input("분류코드 불일치", value=st.session_state.templates["s2_2_2"])
-    with col_t2:
-        st.markdown("**기술/제품 전용**")
-        st.session_state.templates["s3_1"] = st.text_input("[기술] 특허 상태(출원/공개)", value=st.session_state.templates["s3_1"])
-        st.session_state.templates["s4_1"] = st.text_input("[기술] 시험성적서 미제출", value=st.session_state.templates["s4_1"])
-        st.session_state.templates["s5_1"] = st.text_input("[제품] 품질경영인증 미제출", value=st.session_state.templates["s5_1"])
-        st.session_state.templates["s5_2"] = st.text_input("[제품] 생산현장 증빙 미제출", value=st.session_state.templates["s5_2"])
-    # 복잡함을 피하기 위해 일부 핵심 항목만 설정에 노출했습니다. 필요시 추가 가능합니다.
+    # 설정 모달을 사이드바 버튼으로 호출
+    if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
+        show_settings_modal()
+        
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
-# 얇은 여백 구분선 (공통 필수 규칙 7)
-st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+# --- 7. 메인 화면 ---
+st.title("🔍 녹색인증 서류검토 Agent PRO")
 
 # 상단 필터 (녹색기술 vs 녹색제품)
 st.markdown("### 📌 검토 유형")
 global_type = st.radio("검토 유형 선택", ["tech", "prod"], format_func=lambda x: "🟢 녹색기술" if x == "tech" else "📦 녹색제품", horizontal=True, label_visibility="collapsed")
 
-# 얇은 여백 구분선
+# 얇은 여백 구분선 (공통 필수 규칙 7)
 st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
 st.subheader("✅ 검토 체크리스트")
 
 results = []
 total_errors = 0
-tpl = st.session_state.templates  # 설정된 템플릿 호출용
+tpl = st.session_state.templates
 
 # [1. 기업 정보 (공통)]
 with st.expander("1. 기업 정보 확인", expanded=True):
@@ -236,8 +239,7 @@ else:
         if sec5_errors:
             results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
 
-# --- 7. 사이드바 하단 (결과 출력 및 초기화) ---
-# 메인 화면의 체크리스트 결과를 수집한 뒤 사이드바에 출력합니다.
+# --- 8. 사이드바 하단 (결과 출력 및 초기화) ---
 with st.sidebar:
     st.subheader("📝 보완 요청 내용")
     st.info(f"💡 발견된 보완사항: **{total_errors}개**")
