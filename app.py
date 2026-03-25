@@ -1,5 +1,6 @@
 # app.py
 import streamlit as st
+import streamlit.components.v1 as components
 import base64
 import os
 
@@ -86,11 +87,57 @@ default_templates = {
 if "templates" not in st.session_state:
     st.session_state["templates"] = default_templates.copy()
 
-# 완벽한 초기화를 위한 콜백 함수 (st.rerun 충돌 방지)
+# 모든 입력 위젯 캐시를 완전히 삭제하여 초기화 오류를 막는 콜백 함수
 def clear_form():
     keys_to_delete = [key for key in st.session_state.keys() if key not in ["authenticated", "templates"]]
     for key in keys_to_delete:
         del st.session_state[key]
+
+# --- 커스텀 스마트 복사 버튼 (JS 활용) ---
+def render_copy_button(text_to_copy):
+    # 특수문자나 줄바꿈 오류를 막기 위해 텍스트를 base64로 안전하게 인코딩하여 JS로 넘깁니다.
+    b64_text = base64.b64encode(text_to_copy.encode("utf-8")).decode("utf-8")
+    button_id = "copyButton"
+    html_str = f"""
+    <style>
+        body {{ margin: 0; padding: 0; font-family: "Source Sans Pro", sans-serif; }}
+        .copy-btn {{
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 38px;
+            background-color: transparent; color: inherit;
+            border: 1px solid currentColor; border-radius: 8px; opacity: 0.7;
+            font-size: 14px; cursor: pointer; transition: all 0.2s ease;
+        }}
+        .copy-btn:hover {{ opacity: 1; border-color: #FF4B4B; color: #FF4B4B; }}
+    </style>
+    <button class="copy-btn" id="{button_id}" onclick="copyToClipboard()">
+        📋 결과 전체 복사하기
+    </button>
+    <script>
+        // 상위 Streamlit 테마의 색상을 감지하여 버튼 색상을 자동(다크/라이트) 조절합니다.
+        const style = window.getComputedStyle(window.parent.document.body);
+        const btn = document.getElementById('{button_id}');
+        btn.style.color = style.color;
+        
+        function copyToClipboard() {{
+            try {{
+                const text = decodeURIComponent(escape(window.atob('{b64_text}')));
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                
+                btn.innerText = '✅ 복사 완료!';
+                setTimeout(() => {{ btn.innerText = '📋 결과 전체 복사하기'; }}, 2000);
+            }} catch (err) {{
+                console.error("복사 실패", err);
+            }}
+        }}
+    </script>
+    """
+    components.html(html_str, height=45)
 
 # --- 5. 팝업창 (모달) UI 정의 ---
 @st.dialog("⚙️ 보완 요청 문구 설정")
@@ -134,7 +181,6 @@ with st.sidebar:
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-# 상단 필터 (3가지 유형)
 st.markdown("### 📌 검토 유형")
 global_type = st.radio(
     "검토 유형 선택", 
@@ -258,12 +304,17 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    # 시원한 텍스트 박스로 원복 완료!
-    st.text_area("결과 복사 (클릭 후 Ctrl+A, Ctrl+C)", value=final_output, height=400, label_visibility="collapsed")
+    # 기존처럼 보기 편한 넓은 텍스트 박스로 유지
+    st.text_area("결과 확인", value=final_output, height=350, label_visibility="collapsed")
     
-    # st.rerun() 없이 on_click 콜백만 사용하여 세션을 확실하게 날려버립니다.
+    # 아날로그 복사를 끝낼 커스텀 스마트 복사 버튼 호출!
+    render_copy_button(final_output)
+    
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">', unsafe_allow_html=True)
+    
+    # st.rerun() 충돌 방지 콜백함수를 통한 완벽한 초기화!
     if st.button("🔄 전체 초기화", use_container_width=True, on_click=clear_form):
-        pass # 콜백이 모든 것을 해결합니다.
+        pass
         
     if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
         show_settings_modal()
