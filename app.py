@@ -38,8 +38,13 @@ st.markdown(f"""
     /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
     
-    /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
-    [data-testid="stSidebar"] textarea {{
+    /* 사이드바 st.code 영역 텍스트 자동 줄바꿈 및 최소 높이/폰트 조절 */
+    [data-testid="stCodeBlock"] {{
+        min-height: 300px;
+    }}
+    [data-testid="stCodeBlock"] code {{
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
         font-size: 13px !important;
         line-height: 1.5 !important;
     }}
@@ -86,6 +91,7 @@ default_templates = {
 if "templates" not in st.session_state:
     st.session_state["templates"] = default_templates.copy()
 
+# 초기화를 완벽하게 수행하기 위한 on_click 콜백 함수
 def clear_form():
     for key in list(st.session_state.keys()):
         if key not in ["authenticated", "templates"]:
@@ -143,7 +149,7 @@ global_type = st.radio(
     format_func=lambda x: "🟢 녹색기술인증" if x == "tech" else ("📦 녹색기술제품" if x == "prod" else "🏢 녹색전문기업"), 
     horizontal=True, 
     label_visibility="collapsed",
-    key="global_type" # 초기화를 위한 key 추가
+    key="global_type"
 )
 
 st.subheader("✅ 검토 체크리스트")
@@ -165,14 +171,12 @@ else:
             total_errors += 1
             
         if st.checkbox("법인등기부등본 / 사업자등록증 관련 오류", key="corpReg"):
-            # 초기화를 위해 key 추가
             is_indiv = st.radio("해당 기업이 개인사업자인가요?", ["선택 안됨", "예(개인)", "아니오(법인)"], horizontal=True, key="is_indiv")
             
             if is_indiv == "아니오(법인)":
                 sec1_errors.append(tpl["corpReg_corp"])
                 total_errors += 1
             elif is_indiv == "예(개인)":
-                # 초기화를 위해 key 추가
                 is_recent = st.radio("사업자등록증이 최근 3개월 이내 발행본인가요?", ["선택 안됨", "예", "아니오"], horizontal=True, key="is_recent")
                 if is_recent == "아니오":
                     sec1_errors.append(tpl["corpReg_indiv"])
@@ -232,7 +236,6 @@ else:
         with st.expander("4. 시험성적서 확인 (녹색기술)", expanded=True):
             sec4_errors = []
             if st.checkbox("공인기관성적서 미제출", key="s4_1"):
-                # 초기화를 위해 key 추가
                 ans = st.radio("자체시험성적서 및 사유서를 대신 제출했나요?", ["선택 안됨", "예", "아니오"], horizontal=True, key="ans_s4")
                 if ans == "아니오":
                     sec4_errors.append(tpl["s4_1"])
@@ -263,12 +266,11 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    # 복사 버튼이 자동으로 생성되는 st.code로 변경 (수정 불가, 복사 전용)
+    # 복사 버튼이 자동으로 생성되는 st.code 영역 (CSS로 크기 최적화됨)
     st.code(final_output, language="text")
     
-    if st.button("🔄 초기화", use_container_width=True):
-        clear_form()
-        st.rerun()
+    # on_click 콜백을 사용하여 세션을 화면 렌더링 전에 완벽하게 초기화
+    st.button("🔄 초기화", use_container_width=True, on_click=clear_form)
         
     if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
         show_settings_modal()
