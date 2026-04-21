@@ -11,17 +11,19 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
-    st.title("🔒 사내 시스템 로그인")
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-    
-    # 📌 [수정 필요] Streamlit Cloud의 Secrets에 APP_PASSWORD를 설정해 주세요.
-    user_pwd = st.text_input("접근 비밀번호를 입력하세요", type="password")
-    if st.button("로그인", use_container_width=True):
-        if user_pwd == st.secrets.get("APP_PASSWORD", "default_password"):
-            st.session_state["authenticated"] = True
-            st.rerun()
-        else:
-            st.error("비밀번호가 일치하지 않습니다.")
+    st.warning("🔒 보안을 위해 비밀번호를 입력해주세요.")
+    with st.form("login_form"):
+        pwd = st.text_input("비밀번호", type="password")
+        submitted = st.form_submit_button("확인")
+        
+        if submitted:
+            # 📌 [수정 필요] Streamlit Cloud의 Secrets에 APP_PASSWORD를 설정해 주세요.
+            expected_pwd = st.secrets.get("APP_PASSWORD", "1234") 
+            if pwd == expected_pwd:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("비밀번호가 일치하지 않습니다.")
     st.stop()
 
 # --- 3. UI 최적화 및 회사 로고 설정 ---
@@ -225,94 +227,4 @@ else:
             results.append("[기업 정보 보완]\n" + "\n".join(sec1_errors))
 
     # [2. 기술/제품 설명서 (공통)]
-    with st.expander("2. 설명서 확인", expanded=True):
-        sec2_errors = []
-        
-        st.markdown("**2-1. 시스템 정보 불일치**")
-        cols2_1 = st.columns(2)
-        if cols2_1[0].checkbox("기술명/제품명 불일치", key="s2_1_1"): 
-            sec2_errors.append(tpl["s2_1_1"]); total_errors += 1
-        
-        st.markdown("**2-2. 1p 요약서 내용 불일치**")
-        cols2_2 = st.columns(2)
-        if cols2_2[0].checkbox("분류체계", key="s2_2_1"): sec2_errors.append(tpl["s2_2_1"]); total_errors += 1
-        if cols2_2[1].checkbox("분류코드", key="s2_2_2"): sec2_errors.append(tpl["s2_2_2"]); total_errors += 1
-        if cols2_2[0].checkbox("핵심요소기술", key="s2_2_3"): sec2_errors.append(tpl["s2_2_3"]); total_errors += 1
-        if cols2_2[1].checkbox("기술수준", key="s2_2_4"): sec2_errors.append(tpl["s2_2_4"]); total_errors += 1
-
-        st.markdown("**2-3. 목차 누락 (해당 번호 클릭)**")
-        toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
-        if global_type == "prod":
-            toc_items.insert(3, "1-4")
-            
-        missing_tocs = []
-        cols2_3 = st.columns(4) 
-        for idx, toc in enumerate(toc_items):
-            if cols2_3[idx % 4].checkbox(f"({toc})", key=f"toc_{toc}"):
-                missing_tocs.append(toc)
-                total_errors += 1
-                
-        if missing_tocs:
-            sec2_errors.append(tpl["s2_3"].replace("{missing_tocs}", ", ".join(missing_tocs)))
-            
-        if sec2_errors:
-            results.append("[설명서 보완]\n" + "\n".join(sec2_errors))
-
-    # [3, 4. 녹색기술 전용 섹션]
-    if global_type == "tech":
-        with st.expander("3. 지식재산권 확인 (녹색기술)", expanded=True):
-            sec3_errors = []
-            if st.checkbox("등록 특허가 아님 (출원/공개 상태)", key="s3_1"):
-                sec3_errors.append(tpl["s3_1"]); total_errors += 1
-            if st.checkbox("특허등록원부 미제출", key="s3_2"):
-                sec3_errors.append(tpl["s3_2"]); total_errors += 1
-            if st.checkbox("공동권리자 존재 및 동의서 미제출", key="s3_3"):
-                sec3_errors.append(tpl["s3_3"]); total_errors += 1
-                
-            if sec3_errors:
-                results.append("[지식재산권 보완]\n" + "\n".join(sec3_errors))
-
-        with st.expander("4. 시험성적서 확인 (녹색기술)", expanded=True):
-            sec4_errors = []
-            if st.checkbox("공인기관성적서 미제출", key="s4_1"):
-                ans = st.radio("자체시험성적서 및 사유서를 대신 제출했나요?", ["선택 안됨", "예", "아니오"], horizontal=True, key="ans_s4")
-                if ans == "아니오":
-                    sec4_errors.append(tpl["s4_1"])
-                    total_errors += 1
-            if st.checkbox("신청 기업 명의 불일치", key="s4_2"):
-                sec4_errors.append(tpl["s4_2"]); total_errors += 1
-                
-            if sec4_errors:
-                results.append("[시험성적서 보완]\n" + "\n".join(sec4_errors))
-
-    # [3. 녹색제품 전용 섹션]
-    elif global_type == "prod":
-        with st.expander("3. 제품 관련 서류 확인 (녹색제품)", expanded=True):
-            sec5_errors = []
-            if st.checkbox("품질경영인증 미제출", key="s5_1"):
-                sec5_errors.append(tpl["s5_1"]); total_errors += 1
-            if st.checkbox("생산현장 증빙 미제출", key="s5_2"):
-                sec5_errors.append(tpl["s5_2"]); total_errors += 1
-                
-            if sec5_errors:
-                results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
-
-# --- 8. 사이드바 하단 (결과 출력 및 버튼들) ---
-with st.sidebar:
-    error_count_placeholder.info(f"💡 발견된 보완사항: **{total_errors}개**")
-    
-    final_output = "\n\n".join(results)
-    if not final_output:
-        final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
-        
-    st.text_area("결과 확인", value=final_output, height=350, label_visibility="collapsed")
-    
-    render_copy_button(final_output)
-    
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-    
-    if st.button("🔄 전체 초기화", use_container_width=True, on_click=clear_form):
-        pass
-        
-    if st.button("⚙️ 템플릿 문구 설정", use_container_width=True):
-        show_settings_modal()
+    with st.expander("2. 설명서 확인
