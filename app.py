@@ -184,7 +184,7 @@ with st.sidebar:
 # --- 7. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
-st.markdown("### 📌 검토 유형")
+# 불필요한 제목 텍스트("📌 검토 유형", "✅ 검토 체크리스트") 삭제
 global_type = st.radio(
     "검토 유형 선택", 
     ["tech", "prod", "company"], 
@@ -193,8 +193,6 @@ global_type = st.radio(
     label_visibility="collapsed",
     key="global_type"
 )
-
-st.subheader("✅ 검토 체크리스트")
 
 results = []
 total_errors = 0
@@ -223,8 +221,9 @@ else:
                     sec1_errors.append(tpl["corpReg_indiv"])
                     total_errors += 1
                     
+        # 소제목 없이 리스트에 바로 추가
         if sec1_errors:
-            results.append("[기업 정보 보완]\n" + "\n".join(sec1_errors))
+            results.extend(sec1_errors)
 
     # [2. 기술/제품 설명서 (공통)]
     with st.expander("2. 설명서 확인", expanded=True):
@@ -257,8 +256,9 @@ else:
         if missing_tocs:
             sec2_errors.append(tpl["s2_3"].replace("{missing_tocs}", ", ".join(missing_tocs)))
             
+        # 소제목 없이 리스트에 바로 추가
         if sec2_errors:
-            results.append("[설명서 보완]\n" + "\n".join(sec2_errors))
+            results.extend(sec2_errors)
 
     # [3, 4. 녹색기술 전용 섹션]
     if global_type == "tech":
@@ -271,8 +271,9 @@ else:
             if st.checkbox("공동권리자 존재 및 동의서 미제출", key="s3_3"):
                 sec3_errors.append(tpl["s3_3"]); total_errors += 1
                 
+            # 소제목 없이 리스트에 바로 추가
             if sec3_errors:
-                results.append("[지식재산권 보완]\n" + "\n".join(sec3_errors))
+                results.extend(sec3_errors)
 
         with st.expander("4. 시험성적서 확인 (녹색기술)", expanded=True):
             sec4_errors = []
@@ -284,8 +285,9 @@ else:
             if st.checkbox("신청 기업 명의 불일치", key="s4_2"):
                 sec4_errors.append(tpl["s4_2"]); total_errors += 1
                 
+            # 소제목 없이 리스트에 바로 추가
             if sec4_errors:
-                results.append("[시험성적서 보완]\n" + "\n".join(sec4_errors))
+                results.extend(sec4_errors)
 
     # [3. 녹색제품 전용 섹션]
     elif global_type == "prod":
@@ -296,14 +298,16 @@ else:
             if st.checkbox("생산현장 증빙 미제출", key="s5_2"):
                 sec5_errors.append(tpl["s5_2"]); total_errors += 1
                 
+            # 소제목 없이 리스트에 바로 추가
             if sec5_errors:
-                results.append("[제품 관련 서류 보완]\n" + "\n".join(sec5_errors))
+                results.extend(sec5_errors)
 
 # --- 8. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
     error_count_placeholder.info(f"💡 발견된 보완사항: **{total_errors}개**")
     
-    final_output = "\n\n".join(results)
+    # 여러 줄 띄어쓰기 없이 단일 줄바꿈으로 변경
+    final_output = "\n".join(results)
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
