@@ -1,29 +1,30 @@
-# app.py
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
 import os
 
-# --- 1. 페이지 기본 설정 (공통 필수 규칙 2) ---
+# --- 1. 페이지 기본 설정 ---
 st.set_page_config(page_title="녹색인증 서류 검토 Agent PRO", layout="centered", initial_sidebar_state="expanded")
 
-# --- 2. 보안 (비밀번호) 로직 (공통 필수 규칙 3) ---
+# --- 2. 보안 (비밀번호) 로직 ---
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
     st.title("🔒 사내 시스템 로그인")
-    # ⚠️ [수정 필요] .streamlit/secrets.toml 파일에 APP_PASSWORD="여기에비밀번호" 를 설정해야 합니다.
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
+    
+    # 📌 [수정 필요] Streamlit Cloud의 Secrets에 APP_PASSWORD를 설정해 주세요.
     user_pwd = st.text_input("접근 비밀번호를 입력하세요", type="password")
     if st.button("로그인", use_container_width=True):
-        if user_pwd == st.secrets.get("APP_PASSWORD"):
+        if user_pwd == st.secrets.get("APP_PASSWORD", "default_password"):
             st.session_state["authenticated"] = True
             st.rerun()
         else:
             st.error("비밀번호가 일치하지 않습니다.")
     st.stop()
 
-# --- 3. UI 최적화 및 회사 로고 설정 (공통 필수 규칙 4, 6) ---
+# --- 3. UI 최적화 및 회사 로고 설정 ---
 def get_base64_of_bin_file(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -31,10 +32,10 @@ def get_base64_of_bin_file(bin_file):
         return base64.b64encode(data).decode()
     return ""
 
-# ⚠️ [수정 필요] 실제 로고 파일 경로로 맞추어 주세요.
+# 📌 [수정 필요] 실제 로고 파일 경로로 맞추어 주세요.
 logo_base64 = get_base64_of_bin_file("company_logo.png") 
 
-st.markdown(f"""
+custom_css = f"""
 <style>
     /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
@@ -61,8 +62,11 @@ st.markdown(f"""
         }}
     }}
 </style>
-<img src="data:image/png;base64,{logo_base64}" class="company-logo">
-""", unsafe_allow_html=True)
+"""
+if logo_base64:
+    custom_css += f'<img src="data:image/png;base64,{logo_base64}" class="company-logo">'
+
+st.markdown(custom_css, unsafe_allow_html=True)
 
 # --- 4. 자동 생성 문구 템플릿 초기화 (세션 유지) ---
 default_templates = {
@@ -87,7 +91,6 @@ default_templates = {
 if "templates" not in st.session_state:
     st.session_state["templates"] = default_templates.copy()
 
-# 모든 입력 위젯 캐시를 완전히 삭제하여 초기화 오류를 막는 콜백 함수
 def clear_form():
     keys_to_delete = [key for key in st.session_state.keys() if key not in ["authenticated", "templates"]]
     for key in keys_to_delete:
@@ -95,7 +98,6 @@ def clear_form():
 
 # --- 커스텀 스마트 복사 버튼 (JS 활용) ---
 def render_copy_button(text_to_copy):
-    # 특수문자나 줄바꿈 오류를 막기 위해 텍스트를 base64로 안전하게 인코딩하여 JS로 넘깁니다.
     b64_text = base64.b64encode(text_to_copy.encode("utf-8")).decode("utf-8")
     button_id = "copyButton"
     html_str = f"""
@@ -114,7 +116,6 @@ def render_copy_button(text_to_copy):
         📋 결과 전체 복사하기
     </button>
     <script>
-        // 상위 Streamlit 테마의 색상을 감지하여 버튼 색상을 자동(다크/라이트) 조절합니다.
         const style = window.getComputedStyle(window.parent.document.body);
         const btn = document.getElementById('{button_id}');
         btn.style.color = style.color;
@@ -150,7 +151,7 @@ def show_settings_modal():
     st.session_state.templates["corpReg_indiv"] = st.text_input("개인사업자등록증 관련", value=st.session_state.templates["corpReg_indiv"])
     st.session_state.templates["s2_1_1"] = st.text_input("기술/제품명 불일치", value=st.session_state.templates["s2_1_1"])
     
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
     st.markdown("**2. 기술 및 제품 전용**")
     st.session_state.templates["s3_1"] = st.text_input("[기술] 특허 상태(출원/공개)", value=st.session_state.templates["s3_1"])
@@ -166,11 +167,11 @@ with st.sidebar:
     st.markdown(
         '''
         <div style="margin-top: 5px;">
-            <a href="https://ip2b-work-tools.streamlit.app/" target="_blank" style="text-decoration: none; color: currentColor; font-size: 15px; font-weight: 600;">
+            <a href="https://ip2b-work-tools.streamlit.app/" target="_blank" style="text-decoration: none; color: #31333F; font-size: 15px; font-weight: 600;">
                 🏠 홈으로
             </a>
         </div>
-        <hr style="margin-top: 10px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">
+        <hr style="margin-top: 10px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">
         ''', 
         unsafe_allow_html=True
     )
@@ -304,15 +305,12 @@ with st.sidebar:
     if not final_output:
         final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
-    # 기존처럼 보기 편한 넓은 텍스트 박스로 유지
     st.text_area("결과 확인", value=final_output, height=350, label_visibility="collapsed")
     
-    # 아날로그 복사를 끝낼 커스텀 스마트 복사 버튼 호출!
     render_copy_button(final_output)
     
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid currentColor; opacity: 0.2;">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
-    # st.rerun() 충돌 방지 콜백함수를 통한 완벽한 초기화!
     if st.button("🔄 전체 초기화", use_container_width=True, on_click=clear_form):
         pass
         
