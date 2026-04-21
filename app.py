@@ -74,11 +74,11 @@ st.markdown(custom_css, unsafe_allow_html=True)
 default_templates = {
     # 공통: 기업정보
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
-    "corp_biz_err": "사업자등록증명원(최근 3개월 이내 발행본)을 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
     "corp_reg_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
-    "corp_reg_corp": " - 법인등기부등본 : 최근 3개월 이내 자료(제출용)로 제출해 주시기 바랍니다.",
-    "corp_reg_indiv": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
-    "corp_view_err": "제출하신 법인등기부등본이 '열람용'입니다. 반드시 '제출용'으로 발급받아 첨부해 주시기 바랍니다.",
+    "corp_biz_miss": " - 사업자등록증을 첨부하여 주시기 바랍니다.",
+    "corp_biz_old": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
+    "corp_reg_miss": " - 법인등기부등본 : 최근 3개월 이내 자료(제출용)로 제출해 주시기 바랍니다.",
+    "corp_reg_view": " - 제출하신 법인등기부등본이 '열람용'입니다. 반드시 '제출용'으로 발급받아 첨부해 주시기 바랍니다.",
     
     # 공통/분기: 연장 서류
     "ext_tech_cert": "기존 녹색기술인증서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
@@ -243,19 +243,23 @@ else:
         if st.checkbox("대표자명 불일치", key="ceo_err"):
             results.append(tpl["ceo_err"]); total_errors += 1
             
-        if st.checkbox("사업자등록증 미제출", key="biz_err"):
-            results.append(tpl["corp_biz_err"]); total_errors += 1
+        # 사업자/법인 서류 오류 모음
+        corp_sub_errors = []
+        if st.checkbox("사업자등록증 미제출", key="biz_miss"):
+            corp_sub_errors.append(tpl["corp_biz_miss"]); total_errors += 1
             
-        if st.checkbox("법인등기부등본 미제출", key="reg_err"):
-            is_indiv = st.radio("기업 형태", ["법인", "개인"], horizontal=True, key="is_indiv_rad")
-            if is_indiv == "법인":
-                results.append(tpl["corp_reg_main"] + "\n" + tpl["corp_reg_corp"])
-            else:
-                results.append(tpl["corp_reg_main"] + "\n" + tpl["corp_reg_indiv"])
-            total_errors += 1
+        if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"):
+            corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
             
-        if st.checkbox("법인등기부등본 열람용 제출 (제출용 아님)", key="view_err"):
-            results.append(tpl["corp_view_err"]); total_errors += 1
+        if st.checkbox("법인등기부등본 미제출", key="reg_miss"):
+            corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
+            
+        if st.checkbox("법인등기부등본 열람용 제출 (제출용 아님)", key="reg_view"):
+            corp_sub_errors.append(tpl["corp_reg_view"]); total_errors += 1
+            
+        # 하나라도 체크되었다면 메인 문구 하위에 묶어서 1개의 항목으로 출력
+        if corp_sub_errors:
+            results.append(tpl["corp_reg_main"] + "\n" + "\n".join(corp_sub_errors))
 
     # [2. 연장 서류 (연장 선택 시에만)]
     if req_type == "ext":
