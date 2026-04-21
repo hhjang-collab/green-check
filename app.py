@@ -74,9 +74,11 @@ st.markdown(custom_css, unsafe_allow_html=True)
 default_templates = {
     # 공통: 기업정보
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
-    "corp_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
-    "corp_sub_corp": " - 법인등기부등본 : 최근 3개월 이내 자료로 제출해 주시기 바랍니다.",
-    "corp_sub_indiv": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
+    "corp_biz_err": "사업자등록증명원(최근 3개월 이내 발행본)을 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
+    "corp_reg_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
+    "corp_reg_corp": " - 법인등기부등본 : 최근 3개월 이내 자료(제출용)로 제출해 주시기 바랍니다.",
+    "corp_reg_indiv": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
+    "corp_view_err": "제출하신 법인등기부등본이 '열람용'입니다. 반드시 '제출용'으로 발급받아 첨부해 주시기 바랍니다.",
     
     # 공통/분기: 연장 서류
     "ext_tech_cert": "기존 녹색기술인증서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
@@ -123,10 +125,18 @@ default_templates = {
 if "templates" not in st.session_state:
     st.session_state["templates"] = default_templates.copy()
 
+# --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
 def clear_form():
-    keys_to_delete = [key for key in st.session_state.keys() if key not in ["authenticated", "templates"]]
-    for key in keys_to_delete:
-        del st.session_state[key]
+    # 검토유형(기술/제품), 신청구분(신규/연장), 인증, 템플릿 등 유지할 키 목록
+    keep_keys = ["authenticated", "templates", "global_type", "req_type"]
+    
+    for key in list(st.session_state.keys()):
+        if key not in keep_keys:
+            # boolean(체크박스) 타입은 삭제 대신 False로 강제 덮어쓰기하여 UI 동기화
+            if isinstance(st.session_state[key], bool):
+                st.session_state[key] = False
+            else:
+                del st.session_state[key]
 
 # --- 커스텀 스마트 복사 버튼 (JS 활용) ---
 def render_copy_button(text_to_copy):
@@ -233,21 +243,19 @@ else:
         if st.checkbox("대표자명 불일치", key="ceo_err"):
             results.append(tpl["ceo_err"]); total_errors += 1
             
-        if st.checkbox("사업자/법인등기부등본 관련 보완", key="corp_err"):
-            is_indiv = st.radio("기업 형태", ["선택 안됨", "예(개인)", "아니오(법인)"], horizontal=True, key="is_indiv")
+        if st.checkbox("사업자등록증 미제출", key="biz_err"):
+            results.append(tpl["corp_biz_err"]); total_errors += 1
             
-            corp_sub_errors = []
-            if is_indiv == "아니오(법인)":
-                corp_sub_errors.append(tpl["corp_sub_corp"]); total_errors += 1
-            elif is_indiv == "예(개인)":
-                is_recent = st.radio("최근 3개월 이내 발행본 여부?", ["선택 안됨", "예", "아니오"], horizontal=True, key="is_recent")
-                if is_recent == "아니오":
-                    corp_sub_errors.append(tpl["corp_sub_indiv"]); total_errors += 1
-                    
-            if not corp_sub_errors:
-                results.append(tpl["corp_main"]); total_errors += 1
+        if st.checkbox("법인등기부등본 미제출", key="reg_err"):
+            is_indiv = st.radio("기업 형태", ["법인", "개인"], horizontal=True, key="is_indiv_rad")
+            if is_indiv == "법인":
+                results.append(tpl["corp_reg_main"] + "\n" + tpl["corp_reg_corp"])
             else:
-                results.append(tpl["corp_main"] + "\n" + "\n".join(corp_sub_errors))
+                results.append(tpl["corp_reg_main"] + "\n" + tpl["corp_reg_indiv"])
+            total_errors += 1
+            
+        if st.checkbox("법인등기부등본 열람용 제출 (제출용 아님)", key="view_err"):
+            results.append(tpl["corp_view_err"]); total_errors += 1
 
     # [2. 연장 서류 (연장 선택 시에만)]
     if req_type == "ext":
