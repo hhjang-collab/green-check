@@ -70,7 +70,8 @@ if logo_base64:
 
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# --- 4. 자동 생성 문구 템플릿 초기화 ---
+# --- 4. 자동 생성 문구 템플릿 정의 ---
+# 📌 사내 표준 문구가 변경되면 여기서 직접 텍스트를 수정하시면 됩니다.
 default_templates = {
     # 공통: 기업정보
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
@@ -122,14 +123,14 @@ default_templates = {
     "fac_oem_err": "OEM서류 오류 : 생산현장증빙서류(OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다."
 }
 
-if "templates" not in st.session_state:
-    st.session_state["templates"] = default_templates.copy()
-
-# --- 완벽한 체크박스 강제 초기화 로직 ---
+# --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
 def clear_form():
-    keep_keys = ["authenticated", "templates", "global_type", "req_type"]
+    # 검토유형(기술/제품), 신청구분(신규/연장), 인증 등 유지할 키 목록
+    keep_keys = ["authenticated", "global_type", "req_type"]
+    
     for key in list(st.session_state.keys()):
         if key not in keep_keys:
+            # boolean(체크박스) 타입은 삭제 대신 False로 강제 덮어쓰기하여 UI 동기화
             if isinstance(st.session_state[key], bool):
                 st.session_state[key] = False
             else:
@@ -179,78 +180,7 @@ def render_copy_button(text_to_copy):
     """
     components.html(html_str, height=45)
 
-# --- 5. 팝업창 (모달) 에디터 UI 정의 ---
-@st.dialog("⚙️ 템플릿 문구 미세조정", width="large")
-def show_settings_modal():
-    st.caption("체크리스트 선택 시 자동 입력되는 기본 문구를 사내 양식에 맞게 수정하세요.")
-    
-    tab1, tab2, tab3, tab4 = st.tabs(["기업/연장", "설명서", "지식재산권", "성적서/제품"])
-    tpl = st.session_state["templates"]
-    
-    with tab1:
-        st.subheader("기업 정보")
-        tpl["ceo_err"] = st.text_area("대표자명 불일치", value=tpl["ceo_err"])
-        tpl["corp_reg_main"] = st.text_area("사업자/법인등기부 공통 문구", value=tpl["corp_reg_main"])
-        tpl["corp_biz_miss"] = st.text_area("사업자등록증 미제출", value=tpl["corp_biz_miss"])
-        tpl["corp_biz_old"] = st.text_area("사업자등록증 3개월 초과", value=tpl["corp_biz_old"])
-        tpl["corp_reg_miss"] = st.text_area("법인등기부등본 미제출", value=tpl["corp_reg_miss"])
-        tpl["corp_reg_view"] = st.text_area("법인등기부등본 열람용 제출", value=tpl["corp_reg_view"])
-        st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-        st.subheader("연장 관련")
-        tpl["ext_tech_cert"] = st.text_area("기술 연장 서류 누락", value=tpl["ext_tech_cert"])
-        tpl["ext_tech_name"] = st.text_area("기술 연장 기술명 불일치", value=tpl["ext_tech_name"])
-        tpl["ext_prod_cert"] = st.text_area("제품 연장 서류 누락", value=tpl["ext_prod_cert"])
-        tpl["ext_prod_name"] = st.text_area("제품 연장 제품명 불일치", value=tpl["ext_prod_name"])
-        tpl["ext_prod_model"] = st.text_area("제품 연장 모델 추가/변경", value=tpl["ext_prod_model"])
-        
-    with tab2:
-        st.subheader("설명서 오류")
-        tpl["doc_open_err"] = st.text_area("파일 열림 오류", value=tpl["doc_open_err"])
-        tpl["doc_missing"] = st.text_area("설명서 양식 완전 누락", value=tpl["doc_missing"])
-        tpl["doc_name_err"] = st.text_area("명칭 불일치", value=tpl["doc_name_err"])
-        tpl["doc_level_err"] = st.text_area("1p 기술수준 오류", value=tpl["doc_level_err"])
-        tpl["doc_comp_err"] = st.text_area("1p 회사명 오류", value=tpl["doc_comp_err"])
-        tpl["doc_toc_err"] = st.text_area("목차 누락", value=tpl["doc_toc_err"])
-        st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-        st.subheader("작성 규정 위반")
-        tpl["tech_as_prod"] = st.text_area("기술명칭에 제품명 혼용", value=tpl["tech_as_prod"])
-        tpl["prod_as_tech"] = st.text_area("제품명칭에 기술명 혼용", value=tpl["prod_as_tech"])
-        tpl["prod_inc_tech"] = st.text_area("신청제품설명서 제품명에 기술명 포함", value=tpl["prod_inc_tech"])
-        tpl["prod_inc_model"] = st.text_area("신청제품설명서 제품명에 모델명 포함", value=tpl["prod_inc_model"])
-        tpl["prod_model_info"] = st.text_area("모델 스펙/정보 누락", value=tpl["prod_model_info"])
-
-    with tab3:
-        st.subheader("지식재산권")
-        tpl["ip_open_err"] = st.text_area("IP 파일 열림 오류", value=tpl["ip_open_err"])
-        tpl["ip_docs_err"] = st.text_area("3종(증/원부/공보) 누락", value=tpl["ip_docs_err"])
-        tpl["ip_owner_err"] = st.text_area("권리자 기업명 불일치", value=tpl["ip_owner_err"])
-        tpl["ip_not_reg"] = st.text_area("미등록(출원/공개) 상태", value=tpl["ip_not_reg"])
-        tpl["ip_lic_err"] = st.text_area("실시권자 누락", value=tpl["ip_lic_err"])
-        tpl["ip_agree_err"] = st.text_area("활용동의서 누락", value=tpl["ip_agree_err"])
-
-    with tab4:
-        st.subheader("시험성적서")
-        tpl["test_kolas"] = st.text_area("KOLAS 공인기관 아님", value=tpl["test_kolas"])
-        tpl["test_old"] = st.text_area("3년 초과 자료", value=tpl["test_old"])
-        tpl["test_self"] = st.text_area("자체성적서 사유서 누락", value=tpl["test_self"])
-        tpl["test_client"] = st.text_area("의뢰인 불일치", value=tpl["test_client"])
-        st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-        st.subheader("제품 추가 서류 (품질/공장)")
-        tpl["prod_iso"] = st.text_area("품질경영(ISO/KS) 누락", value=tpl["prod_iso"])
-        tpl["fac_ceo"] = st.text_area("공장등록증 대표자 불일치", value=tpl["fac_ceo"])
-        tpl["fac_missing"] = st.text_area("공장/직생/OEM 서류 누락", value=tpl["fac_missing"])
-        tpl["fac_oem_err"] = st.text_area("OEM 계약/세금계산서 오류", value=tpl["fac_oem_err"])
-        
-    col_a, col_b = st.columns(2)
-    with col_a:
-        if st.button("💾 저장 후 닫기", use_container_width=True):
-            st.rerun()
-    with col_b:
-        if st.button("🔄 기본값 복구", use_container_width=True):
-            st.session_state["templates"] = default_templates.copy()
-            st.rerun()
-
-# --- 6. 사이드바 상단 구성 ---
+# --- 5. 사이드바 상단 구성 ---
 with st.sidebar:
     st.markdown(
         '''
@@ -267,7 +197,7 @@ with st.sidebar:
     st.subheader("📝 보완 요청 내용")
     error_count_placeholder = st.empty()
 
-# --- 7. 메인 화면 ---
+# --- 6. 메인 화면 ---
 st.title("🔍 녹색인증 서류검토 Agent PRO")
 
 col1, col2 = st.columns(2)
@@ -291,7 +221,7 @@ st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border: 0; border-
 # 플랫한 형태로 결과 문구를 모으는 리스트
 results = []
 total_errors = 0
-tpl = st.session_state.templates
+tpl = default_templates # 세션 대신 딕셔너리에서 직접 가져옵니다.
 
 if global_type == "company":
     st.info("🏢 녹색전문기업 검토 기능은 추후 업데이트 예정입니다.")
@@ -414,7 +344,7 @@ else:
             if st.checkbox("공장/직생/OEM 서류 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
             if st.checkbox("OEM 계약/세금계산서 오류", key="fac_oem"): results.append(tpl["fac_oem_err"]); total_errors += 1
 
-# --- 8. 사이드바 하단 (결과 출력 및 버튼들) ---
+# --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
     error_count_placeholder.info(f"💡 발견된 보완사항: **{total_errors}개**")
     
@@ -433,6 +363,3 @@ with st.sidebar:
     
     if st.button("🔄 전체 초기화", use_container_width=True, on_click=clear_form):
         pass
-        
-    if st.button("⚙️ 템플릿 미세조정", use_container_width=True):
-        show_settings_modal()
