@@ -4,7 +4,7 @@ import base64
 import os
 
 # --- 1. 페이지 기본 설정 ---
-st.set_page_config(page_title="녹색인증 서류 검토 Agent PRO", layout="centered", initial_sidebar_state="expanded")
+st.set_page_config(page_title="녹색인증 서류 검토", layout="centered", initial_sidebar_state="expanded")
 
 # --- 2. 보안 (비밀번호) 로직 ---
 if "authenticated" not in st.session_state:
@@ -78,8 +78,8 @@ default_templates = {
     "corp_reg_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
     "corp_biz_miss": " - 사업자등록증을 첨부하여 주시기 바랍니다.",
     "corp_biz_old": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
-    "corp_reg_miss": " - 법인등기부등본 : 최근 3개월 이내 자료(제출용)로 제출해 주시기 바랍니다.",
-    "corp_reg_view": " - 제출하신 법인등기부등본이 '열람용'입니다. 반드시 '제출용'으로 발급받아 첨부해 주시기 바랍니다.",
+    "corp_reg_miss": " - 법인등기부등본을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
+    "corp_reg_view": " - 법인등기부등본을 열람용이 아닌 제출용으로 첨부해주셔야 합니다.",
     
     # 공통/분기: 연장 서류
     "ext_tech_cert": "기존 녹색기술인증서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
@@ -91,36 +91,36 @@ default_templates = {
     # 설명서 오류 (공통 및 분기)
     "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
     "doc_missing": "녹색인증 홈페이지의 \"규정/서식 > 서식자료실\"에서 \"녹색기술(제품)신청서 및 작성가이드라인(2024)\" 다운로드하여 작성 후 제출해 주시기 바랍니다.",
-    "doc_name_err": "{type}명칭 불일치 : {type}설명서와 시스템신청서간 {type}명이 일치하지 않습니다.",
-    "doc_level_err": "설명서(1p) : 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
-    "doc_comp_err": "설명서 : 회사명은 시스템과 동일하게 기재되어야 함",
+    "doc_name_err": "{type}명칭 불일치: {type}설명서와 시스템신청서간 {type}명이 일치하지 않습니다.",
+    "doc_level_err": "설명서 1p의 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
+    "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
     "doc_toc_err": "서식자료실의 신청{type}설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
     "tech_as_prod": "본 신청건은 녹색기술인증 건으로, 기술설명서 양식에 제품명이 아닌 기술명을 시스템 상에도 동일하게 작성해 주시기 바랍니다.\n * 작성 예) OOOO 기술, OOOO 방법",
     "prod_as_tech": "본 신청건은 녹색기술제품인증 건으로, 제품설명서 양식에 기술명이 아닌 제품명을 시스템 상의 제품명과 동일하게 작성해 주시기 바랍니다.\n * 작성 예) OOO 제품 (O)  // OOOO 기술, OOOO 방법 (X)",
-    "prod_inc_tech": " - 제품명 오류 : 신청기술설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
+    "prod_inc_tech": " - 제품명 오류: 신청기술설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
     "prod_inc_model": " - 신청제품설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
-    "prod_model_info": "모델정보 누락 : 신청모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (별첨파일 가능)",
+    "prod_model_info": "모델정보 누락: 신청모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (설명서 또는 붙임)",
 
     # 지식재산권 (기술)
     "ip_open_err": "파일이 오류가 있어 열람할 수 없습니다.",
-    "ip_docs_err": "지식재산권 : 지식재산권 등록은 [특허증+특허등록원부+특허공보]로 제출해 주시기 바랍니다.",
-    "ip_owner_err": "지식재산권 오류 : 지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 이전 기업명이면 수정하여 제출해 주셔야 합니다.",
-    "ip_not_reg": "지식재산권 오류 : 등록된 특허로 된 기술의 등록원부로 제출되어야 합니다. (공지사항 내 \"2025년 FAQ 매뉴얼\" 73p. 참조)",
+    "ip_docs_err": "지식재산권 등록은 특허등록원부로 제출해 주시기 바랍니다.",
+    "ip_owner_err": "지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 이전 기업명이면 수정하여 제출해 주셔야 합니다.",
+    "ip_not_reg": "등록된 특허로 된 기술의 등록원부로 제출되어야 합니다. (공지사항 내 \"2025년 FAQ 매뉴얼\" 73p. 참조)",
     "ip_lic_err": "특허등록원부의 전용/통상실시권자에 [{comp}]이 존재하지 않습니다.\n * 지식재산권 상의 권리자는 반드시 신청 기업명이어야 합니다. [공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", p.74 참조]",
-    "ip_agree_err": "지식재산권 활용동의서 : 최종권리자가 다수인 경우 공동권리자의 동의서(서식자료실의 지식재산권 활용 동의서)를 작성해 주셔야 합니다.\n - 지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 기업법인과 대표자 명의의 특허일지라도 녹색인증 신청 시, 지식재산권 보유에 대한 권리를 양도, 위임에 대한 계약서를 별첨하거나 실시권을 받아야 합니다.\n ※ 통상/전용실시권을 받은 경우, 지식재산권 활용동의서의 작성이 필요없음",
+    "ip_agree_err": "지식재산권 활용동의서: 최종권리자가 다수인 경우 공동권리자의 동의서(서식자료실의 지식재산권 활용 동의서)를 작성해 주셔야 합니다.\n - 지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 기업법인과 대표자 명의의 특허일지라도 녹색인증 신청 시, 지식재산권 보유에 대한 권리를 양도, 위임에 대한 계약서를 별첨하거나 실시권을 받아야 합니다.\n ※ 통상/전용실시권을 받은 경우, 지식재산권 활용동의서의 작성이 필요없음",
 
     # 시험성적서 (공통)
-    "test_kolas": "시험성적서는 KOLAS 등록된 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.",
+    "test_kolas": "시험성적서는 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.",
     "test_old": "최근 3년이내 자료로 제출해주시기 바랍니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 10p. 참조)",
-    "test_self": "자체시험성적서 : 공인된 외부기관이 아닌 자체 시험성적서 또는 의뢰자 제시 시험성적서는 사유서를 함께 제출해 주시기 바랍니다.",
+    "test_self": "자체시험성적서: 공인된 외부기관이 아닌 자체 시험성적서 또는 의뢰자 제시 시험성적서는 사유서를 함께 제출해 주시기 바랍니다.",
     "test_client": "시험성적서 상에 모든 신청 업체가 의뢰인(기업)으로 확인되야 합니다. 시험성적서 관련해서 자세한 사항은 평가기관에 문의바랍니다.",
 
     # 제품 전용 (품질, 공장)
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
     "fac_ceo": "공장등록증의 대표자 명 불일치",
     "fac_missing": "공장등록증 또는 직접생산증명서를 첨부해 주시기 바랍니다. OEM 생산인 경우 (OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다.",
-    "fac_oem_err": "OEM서류 오류 : 생산현장증빙서류(OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다."
+    "fac_oem_err": "생산현장증빙서류(OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다."
 }
 
 # --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
@@ -171,7 +171,7 @@ def render_copy_button(text_to_copy):
                 document.body.removeChild(el);
                 
                 btn.innerText = '✅ 복사 완료!';
-                setTimeout(() => {{ btn.innerText = '📋 결과 전체 복사하기'; }}, 2000);
+                setTimeout(() => {{ btn.innerText = '클릭하여 복사'; }}, 2000);
             }} catch (err) {{
                 console.error("복사 실패", err);
             }}
@@ -194,25 +194,25 @@ with st.sidebar:
         unsafe_allow_html=True
     )
     
-    st.subheader("📝 보완 요청 내용")
+    st.subheader("📝 보완 요청")
     error_count_placeholder = st.empty()
 
 # --- 6. 메인 화면 ---
-st.title("🔍 녹색인증 서류검토 Agent PRO")
+st.title("📄 녹색인증 신청 서류 검토")
 
 col1, col2 = st.columns(2)
 with col1:
     global_type = st.radio(
         "검토 유형", 
         ["tech", "prod", "company"], 
-        format_func=lambda x: "🟢 기술" if x == "tech" else ("📦 제품" if x == "prod" else "🏢 기업"), 
+        format_func=lambda x: "기술" if x == "tech" else ("제품" if x == "prod" else "기업"), 
         horizontal=True, key="global_type"
     )
 with col2:
     req_type = st.radio(
         "신청 구분", 
         ["new", "ext"], 
-        format_func=lambda x: "🆕 신규" if x == "new" else "🔄 연장", 
+        format_func=lambda x: "신규" if x == "new" else "연장", 
         horizontal=True, key="req_type", disabled=(global_type == "company")
     )
 
@@ -224,7 +224,7 @@ total_errors = 0
 tpl = default_templates # 세션 대신 딕셔너리에서 직접 가져옵니다.
 
 if global_type == "company":
-    st.info("🏢 녹색전문기업 검토 기능은 추후 업데이트 예정입니다.")
+    st.info("🏢 녹색전문기업은 추후 업데이트 예정입니다.")
 else:
     type_str = "기술" if global_type == "tech" else "제품"
 
@@ -241,10 +241,10 @@ else:
         if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"):
             corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
             
-        if st.checkbox("법인등기부등본 미제출", key="reg_miss"):
+        if st.checkbox("(법인) 법인등기부등본 미제출", key="reg_miss"):
             corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
             
-        if st.checkbox("법인등기부등본 열람용 제출 (제출용 아님)", key="reg_view"):
+        if st.checkbox("법인등기부등본(열람용)", key="reg_view"):
             corp_sub_errors.append(tpl["corp_reg_view"]); total_errors += 1
             
         # 하나라도 체크되었다면 메인 문구 하위에 묶어서 1개의 항목으로 출력
@@ -346,14 +346,14 @@ else:
 
 # --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
-    error_count_placeholder.info(f"💡 발견된 보완사항: **{total_errors}개**")
+    error_count_placeholder.info(f"💡 보완사항: **{total_errors}개**")
     
     # 넘버링 적용
     if results:
         numbered_results = [f"{i+1}. {res}" for i, res in enumerate(results)]
         final_output = "\n\n".join(numbered_results)
     else:
-        final_output = "메인 화면에서 누락/오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
+        final_output = "오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
         
     st.text_area("결과 확인", value=final_output, height=450, label_visibility="collapsed")
     
@@ -361,5 +361,5 @@ with st.sidebar:
     
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
-    if st.button("🔄 전체 초기화", use_container_width=True, on_click=clear_form):
+    if st.button("🔄 초기화", use_container_width=True, on_click=clear_form):
         pass
