@@ -153,7 +153,7 @@ def render_copy_button(text_to_copy):
         .copy-btn:hover {{ opacity: 1; border-color: #FF4B4B; color: #FF4B4B; }}
     </style>
     <button class="copy-btn" id="{button_id}" onclick="copyToClipboard()">
-        📋 결과 전체 복사하기
+        📋 클릭하여 복사하기
     </button>
     <script>
         const style = window.getComputedStyle(window.parent.document.body);
@@ -171,7 +171,7 @@ def render_copy_button(text_to_copy):
                 document.body.removeChild(el);
                 
                 btn.innerText = '✅ 복사 완료!';
-                setTimeout(() => {{ btn.innerText = '클릭하여 복사'; }}, 2000);
+                setTimeout(() => {{ btn.innerText = '📋 클릭하여 복사하'; }}, 2000);
             }} catch (err) {{
                 console.error("복사 실패", err);
             }}
@@ -269,10 +269,10 @@ else:
 
     # [3. 설명서 (공통)]
     with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
-        st.markdown("**🔹 설명서 파일/양식 오류**")
-        if st.checkbox("설명서 파일 열리지 않음", key="doc_open"):
+        st.markdown("**🔹 설명서 오류**")
+        if st.checkbox("설명서 파일 오류", key="doc_open"):
             results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
-        if st.checkbox("설명서 양식 완전 누락", key="doc_miss"):
+        if st.checkbox("설명서 미제출", key="doc_miss"):
             results.append(tpl["doc_missing"]); total_errors += 1
             
         st.markdown("**🔹 내용 불일치**")
@@ -281,7 +281,7 @@ else:
             results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
         if cols3_1[1].checkbox("1p 기술수준", key="doc_lvl"): 
             results.append(tpl["doc_level_err"]); total_errors += 1
-        if cols3_1[2].checkbox("1p 회사명", key="doc_comp"): 
+        if cols3_1[2].checkbox("1p 기명", key="doc_comp"): 
             results.append(tpl["doc_comp_err"]); total_errors += 1
 
         st.markdown("**🔹 작성 규정 위반**")
@@ -333,7 +333,7 @@ else:
         cols5 = st.columns(2)
         if cols5[0].checkbox("KOLAS 공인기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
         if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
-        if cols5[0].checkbox("자체성적서 (사유서 누락)", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
+        if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
         if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
 
     # [6. 제품 추가 서류 (제품 전용)]
@@ -346,14 +346,14 @@ else:
 
 # --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
-    error_count_placeholder.info(f"💡 보완사항: **{total_errors}개**")
+    error_count_placeholder.info(f"💡 보완 항목: **{total_errors}개**")
     
     # 넘버링 적용
     if results:
         numbered_results = [f"{i+1}. {res}" for i, res in enumerate(results)]
         final_output = "\n\n".join(numbered_results)
     else:
-        final_output = "오류 항목을 체크하시면,\n여기에 자동으로 보완 요청 텍스트가 완성됩니다."
+        final_output = "오류 항목을 체크하시면,\n여기에 보완 요청 텍스트가 작성됩니다."
         
     st.text_area("결과 확인", value=final_output, height=450, label_visibility="collapsed")
     
