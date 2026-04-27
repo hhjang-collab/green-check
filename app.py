@@ -110,7 +110,7 @@ default_templates = {
     "ip_lic_err": "특허등록원부의 전용/통상실시권자에 [{comp}]이 존재하지 않습니다.\n * 지식재산권 상의 권리자는 반드시 신청 기업명이어야 합니다. [공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", p.74 참조]",
     "ip_agree_err": "지식재산권 활용동의서: 최종권리자가 다수인 경우 공동권리자의 동의서(서식자료실의 지식재산권 활용 동의서)를 작성해 주셔야 합니다.\n - 지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 기업법인과 대표자 명의의 특허일지라도 녹색인증 신청 시, 지식재산권 보유에 대한 권리를 양도, 위임에 대한 계약서를 별첨하거나 실시권을 받아야 합니다.\n ※ 통상/전용실시권을 받은 경우, 지식재산권 활용동의서의 작성이 필요없음",
 
-    # 시험성적서 (공통)
+    # 시험성적서 (기술 전용)
     "test_kolas": "시험성적서는 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.",
     "test_old": "최근 3년이내 자료로 제출해주시기 바랍니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 10p. 참조)",
     "test_self": "자체시험성적서: 공인된 외부기관이 아닌 자체 시험성적서 또는 의뢰자 제시 시험성적서는 사유서를 함께 제출해 주시기 바랍니다.",
@@ -326,19 +326,19 @@ else:
                 
             if st.checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
 
-    # [5. 시험성적서 (공통)]
-    exp_num = 5 if global_type == "tech" else 4
-    with st.expander(f"{exp_num}. 시험성적서 검토", expanded=True):
-        st.caption("※ 환경표시인증이 있는 경우 시험성적서 대체 가능")
-        cols5 = st.columns(2)
-        if cols5[0].checkbox("KOLAS 공인기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
-        if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
-        if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
-        if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
+    # [5. 시험성적서 (기술 전용으로 변경)]
+    if global_type == "tech":
+        with st.expander("5. 시험성적서 검토", expanded=True):
+            st.caption("※ 환경표시인증이 있는 경우 시험성적서 대체 가능")
+            cols5 = st.columns(2)
+            if cols5[0].checkbox("KOLAS 공인기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
+            if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
+            if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
+            if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
 
-    # [6. 제품 추가 서류 (제품 전용)]
+    # [6. 제품 추가 서류 (제품 전용) - 넘버링 수정]
     if global_type == "prod":
-        with st.expander("5. 제품 추가 서류 (품질/공장)", expanded=True):
+        with st.expander("4. 제품 추가 서류 (품질/공장)", expanded=True):
             if st.checkbox("품질경영(ISO/KS) 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
             if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
             if st.checkbox("공장/직생/OEM 서류 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
