@@ -241,7 +241,7 @@ else:
         if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"):
             corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
             
-        if st.checkbox("(법인) 법인등기부등본 미제출 또는 3개월 초과 발급분", key="reg_miss"):
+        if st.checkbox("(법인) 법인등기부등본 미제출(3개월 초과)", key="reg_miss"):
             corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
             
         if st.checkbox("법인등기부등본(열람용)", key="reg_view"):
