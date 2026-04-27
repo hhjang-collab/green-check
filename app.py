@@ -338,7 +338,7 @@ else:
 
     # [6. 제품 추가 서류 (제품 전용) - 넘버링 수정]
     if global_type == "prod":
-        with st.expander("4. 제품 추가 서류 (품질/공장)", expanded=True):
+        with st.expander("4. 제품 추가 서류", expanded=True):
             if st.checkbox("품질경영(ISO/KS) 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
             if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
             if st.checkbox("공장/직생/OEM 서류 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
