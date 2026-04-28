@@ -104,68 +104,9 @@ default_templates = {
     
     "tech_as_prod": "본 신청서는 녹색기술인증 건으로, 기술설명서 양식에 제품명이 아닌 기술명을 시스템과 동일하게 작성해 주시기 바랍니다.",
     "prod_as_tech": "본 신청서는 녹색기술제품확인 건으로, 제품 설명서 양식에 기술명이 아닌 제품명을 시스템과 동일하게 작성해 주시기 바랍니다.",
-    "prod_inc_tech": " - 신청 기술 설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
+    "prod_inc_tech": " - 제품명 오류: 신청 기술 설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
     "prod_inc_model": " - 신청 제품 설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
-    "prod_model_info": "신청 모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (설명서 작성 또는 파일첨부)", 
-    /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
-    [data-testid="stSidebar"] textarea {{
-        font-size: 13px !important;
-        line-height: 1.6 !important;
-    }}
-    
-    /* 우측 상단 회사 로고 고정 */
-    .company-logo {{
-        position: fixed;
-        top: 70px;
-        right: 30px;
-        width: 120px;
-        z-index: 1000;
-    }}
-    @media (max-width: 768px) {{
-        .company-logo {{
-            top: 20px;
-            right: 20px;
-            width: 80px;
-        }}
-    }}
-</style>
-"""
-if logo_base64:
-    custom_css += f'<img src="data:image/png;base64,{logo_base64}" class="company-logo">'
-
-st.markdown(custom_css, unsafe_allow_html=True)
-
-# --- 4. 자동 생성 문구 템플릿 정의 ---
-# 📌 사내 표준 문구가 변경되면 여기서 직접 텍스트를 수정하시면 됩니다.
-default_templates = {
-    # 공통: 기업정보
-    "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
-    "corp_reg_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
-    "corp_biz_miss": " - 사업자등록증을 첨부하여 주시기 바랍니다.",
-    "corp_biz_old": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
-    "corp_reg_miss": " - 법인등기부등본을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
-    "corp_reg_view": " - 법인등기부등본을 열람용이 아닌 제출용으로 첨부해주셔야 합니다.",
-    
-    # 공통/분기: 연장 서류
-    "ext_tech_cert": "기존 녹색기술인증서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
-    "ext_tech_name": "기존 녹색기술인증서의 기술명과 연장신청하는 녹색기술의 기술명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 기술명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
-    "ext_prod_cert": "기존 녹색기술제품확인서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
-    "ext_prod_name": "기존 녹색제품확인서의 제품명과 연장신청하는 녹색기술제품의 제품명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 제품명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
-    "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경 시 신규로 신청해주셔야 합니다.",
-
-    # 설명서 오류 (공통 및 분기)
-    "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
-    "doc_missing": "녹색인증 홈페이지의 \"규정/서식 > 서식자료실\"에서 \"녹색기술(제품)신청서 및 작성가이드라인(2024)\" 다운로드하여 작성 후 제출해 주시기 바랍니다.",
-    "doc_name_err": "{type}명 불일치: {type} 설명서와 시스템 신청서 간 {type}명이 일치하지 않습니다.",
-    "doc_level_err": "설명서 1p의 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
-    "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
-    "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
-    
-    "tech_as_prod": "본 신청서는 녹색기술인증 건으로, 기술 설명서에 기술명을 시스템과 동일하게 작성해 주시기 바랍니다.",
-    "prod_as_tech": "본 신청서는 녹색기술제품확인 건으로, 제품 설명서에 제품명을 시스템과 동일하게 작성해 주시기 바랍니다.",
-    "prod_inc_tech": " - 신청 기술 설명서 상 제품명에 기술명이 함께 기재되어 있습니다.",
-    "prod_inc_model": " - 신청 제품 설명서 상 제품명에 모델명이 함께 기재되어 있습니다.",
-    "prod_model_info": "신청 모델별 차이를 확인할 수 있는 정보(규격 등)을 작성해 주시기 바랍니다. (설명서에 작성 또는 파일 첨부)",
+    "prod_model_info": "모델정보 누락: 신청모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (설명서 또는 붙임)",
 
     # 지식재산권 (기술)
     "ip_open_err": "파일이 오류가 있어 열람할 수 없습니다.",
@@ -184,7 +125,7 @@ default_templates = {
 
     # 제품 전용 (품질, 공장)
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
-    "fac_ceo": "공장등록증의 대표자 명이 불일치합니다.",
+    "fac_ceo": "공장등록증의 대표자 명 불일치",
     "fac_missing": "공장등록증 또는 직접생산증명서를 첨부해 주시기 바랍니다. OEM 생산인 경우 (OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다.",
     "fac_oem_err": "생산현장증빙서류(OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다."
 }
@@ -309,11 +250,11 @@ else:
         with st.expander(f"2. {type_str} 연장 서류 확인", expanded=True):
             if global_type == "tech":
                 if st.checkbox("인증서/성과보고서 누락", key="ext_t_cert"): results.append(tpl["ext_tech_cert"]); total_errors += 1
-                if st.checkbox("기술명 불일치", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
+                if st.checkbox("기술명 불일치 (연장 불가)", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
             else:
                 if st.checkbox("확인서/성과보고서 누락", key="ext_p_cert"): results.append(tpl["ext_prod_cert"]); total_errors += 1
-                if st.checkbox("제품명 불일치", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
-                if st.checkbox("모델 추가/변경", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
+                if st.checkbox("제품명 불일치 (연장 불가)", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
+                if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
 
     # [3. 설명서 (공통)]
     with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
@@ -323,7 +264,7 @@ else:
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
         st.write("") # 자연스러운 빈 줄 간격 추가
-        st.markdown("**🔹 설명서 내용 오류**")
+        st.markdown("**🔹 1p 표 오류**")
         cols_mismatch_1 = st.columns(2)
         if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
         if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
@@ -350,7 +291,7 @@ else:
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
         st.write("") # 자연스러운 빈 줄 간격 추가
-        st.markdown("**🔹 목차 누락**")
+        st.markdown("**🔹 서식 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
             
@@ -395,8 +336,8 @@ else:
         with st.expander("4. 제품 추가 서류", expanded=True):
             if st.checkbox("품질경영(ISO/KS) 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
             if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
-            if st.checkbox("공장등록증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
-            if st.checkbox("OEM 계약서/세금계산서 누락", key="fac_oem"): results.append(tpl["fac_oem_err"]); total_errors += 1
+            if st.checkbox("공장/직생/OEM 서류 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
+            if st.checkbox("OEM 계약/세금계산서 오류", key="fac_oem"): results.append(tpl["fac_oem_err"]); total_errors += 1
 
 # --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
