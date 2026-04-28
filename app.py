@@ -291,17 +291,20 @@ else:
                 elif ans == "제품명 포함":
                     results.append(tpl["tech_as_prod"]); total_errors += 1
         else:
-            if st.checkbox("제품명 오류", key="prod_err"):
-                ans = st.radio("오류 내용", ["명칭 불일치", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
-                if ans == "명칭 불일치":
-                    results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
-                elif ans == "기술명 포함":
-                    results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
-                elif ans == "모델명 포함":
-                    results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
-                    
-            if st.checkbox("모델 스펙/정보 누락", key="prod_model_info"):
-                results.append(tpl["prod_model_info"]); total_errors += 1
+            cols3_prod = st.columns(2)
+            with cols3_prod[0]:
+                if st.checkbox("제품명 오류", key="prod_err"):
+                    ans = st.radio("오류 내용", ["명칭 불일치", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
+                    if ans == "명칭 불일치":
+                        results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
+                    elif ans == "기술명 포함":
+                        results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
+                    elif ans == "모델명 포함":
+                        results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
+                        
+            with cols3_prod[1]:
+                if st.checkbox("모델 스펙/정보 누락", key="prod_model_info"):
+                    results.append(tpl["prod_model_info"]); total_errors += 1
 
         st.markdown("**🔹 설명서 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
