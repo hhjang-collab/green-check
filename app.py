@@ -97,15 +97,15 @@ default_templates = {
     # 설명서 오류 (공통 및 분기)
     "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
     "doc_missing": "녹색인증 홈페이지의 \"규정/서식 > 서식자료실\"에서 \"녹색기술(제품)신청서 및 작성가이드라인(2024)\" 다운로드하여 작성 후 제출해 주시기 바랍니다.",
-    "doc_name_err": "{type}명칭 불일치: {type}설명서와 시스템신청서간 {type}명이 일치하지 않습니다.",
+    "doc_name_err": "{type}명 불일치: {type} 설명서와 시스템 신청서 간 {type}명이 일치하지 않습니다.",
     "doc_level_err": "설명서 1p의 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
-    "doc_toc_err": "서식자료실의 신청{type}설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
+    "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
-    "tech_as_prod": "본 신청건은 녹색기술인증 건으로, 기술설명서 양식에 제품명이 아닌 기술명을 시스템 상에도 동일하게 작성해 주시기 바랍니다.\n * 작성 예) OOOO 기술, OOOO 방법",
-    "prod_as_tech": "본 신청건은 녹색기술제품인증 건으로, 제품설명서 양식에 기술명이 아닌 제품명을 시스템 상의 제품명과 동일하게 작성해 주시기 바랍니다.\n * 작성 예) OOO 제품 (O)  // OOOO 기술, OOOO 방법 (X)",
-    "prod_inc_tech": " - 제품명 오류: 신청기술설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
-    "prod_inc_model": " - 신청제품설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
+    "tech_as_prod": "본 신청서는 녹색기술인증 건으로, 기술설명서 양식에 제품명이 아닌 기술명을 시스템과 동일하게 작성해 주시기 바랍니다.",
+    "prod_as_tech": "본 신청서는 녹색기술제품확인 건으로, 제품 설명서 양식에 기술명이 아닌 제품명을 시스템과 동일하게 작성해 주시기 바랍니다.",
+    "prod_inc_tech": " - 제품명 오류: 신청 기술 설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
+    "prod_inc_model": " - 신청 제품 설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
     "prod_model_info": "모델정보 누락: 신청모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (설명서 또는 붙임)",
 
     # 지식재산권 (기술)
@@ -258,21 +258,21 @@ else:
 
     # [3. 설명서 (공통)]
     with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
-        st.markdown("**🔹 설명서 오류**")
+        st.markdown("**🔹 설명서 파일**")
         cols_doc_err = st.columns(2)
-        if cols_doc_err[0].checkbox("설명서 파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
+        if cols_doc_err[0].checkbox("파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
         st.write("") # 자연스러운 빈 줄 간격 추가
-        st.markdown("**🔹 내용 불일치**")
+        st.markdown("**🔹 1p 표 오류**")
         cols_mismatch_1 = st.columns(2)
-        if cols_mismatch_1[0].checkbox("1p 기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
-        if cols_mismatch_1[1].checkbox("1p 기명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
+        if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
+        if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
             
         cols_mismatch_2 = st.columns(2)
         if global_type == "tech":
             with cols_mismatch_2[0]:
-                tech_err = st.checkbox("기술명 오류", key="tech_err")
+                tech_err = st.checkbox("기술명", key="tech_err")
             
             if tech_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "제품명 포함"], horizontal=True, key="tech_err_type")
@@ -280,9 +280,9 @@ else:
                 elif ans == "제품명 포함": results.append(tpl["tech_as_prod"]); total_errors += 1
         else:
             with cols_mismatch_2[0]:
-                prod_err = st.checkbox("제품명 오류", key="prod_err")
+                prod_err = st.checkbox("제품명", key="prod_err")
             with cols_mismatch_2[1]:
-                if st.checkbox("모델 스펙/정보 누락", key="prod_model_info"): results.append(tpl["prod_model_info"]); total_errors += 1
+                if st.checkbox("모델별 정보 누락", key="prod_model_info"): results.append(tpl["prod_model_info"]); total_errors += 1
                 
             if prod_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
@@ -291,7 +291,7 @@ else:
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
         st.write("") # 자연스러운 빈 줄 간격 추가
-        st.markdown("**🔹 설명서 목차 누락**")
+        st.markdown("**🔹 서식 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
             
@@ -307,16 +307,16 @@ else:
     if global_type == "tech":
         with st.expander("4. 지식재산권 검토", expanded=True):
             cols4 = st.columns(2)
-            if cols4[0].checkbox("IP 파일 열림 오류", key="ip_op"): results.append(tpl["ip_open_err"]); total_errors += 1
-            if cols4[1].checkbox("3종(증/원부/공보) 누락", key="ip_docs"): results.append(tpl["ip_docs_err"]); total_errors += 1
+            if cols4[0].checkbox("파일 오류", key="ip_op"): results.append(tpl["ip_open_err"]); total_errors += 1
+            if cols4[1].checkbox("등록원부 누락", key="ip_docs"): results.append(tpl["ip_docs_err"]); total_errors += 1
             
-            if cols4[0].checkbox("미등록(출원/공개) 상태", key="ip_notreg"): results.append(tpl["ip_not_reg"]); total_errors += 1
+            if cols4[0].checkbox("출원/공개 특허", key="ip_notreg"): results.append(tpl["ip_not_reg"]); total_errors += 1
             if cols4[1].checkbox("권리자 기업명 불일치", key="ip_own"): results.append(tpl["ip_owner_err"]); total_errors += 1
             
             if cols4[0].checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
             if cols4[1].checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
             
-            if st.checkbox("실시권자 누락 (업체명 기입필요)", key="ip_lic"):
+            if st.checkbox("실시권자 누락 (업체명 기입)", key="ip_lic"):
                 comp_name = st.text_input("누락된 업체명 입력", key="ip_lic_name")
                 if comp_name: results.append(tpl["ip_lic_err"].replace("{comp}", f"업체명:{comp_name}")); total_errors += 1
                 else: results.append(tpl["ip_lic_err"].replace("{comp}", "업체명")); total_errors += 1
