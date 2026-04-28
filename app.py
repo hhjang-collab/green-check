@@ -82,7 +82,7 @@ default_templates = {
     # 공통: 기업정보
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
     "corp_reg_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
-    "corp_biz_miss": " - 사업자등록증을 첨부하여 주시기 바랍니다.",
+    "corp_biz_miss": " - 사업자등록증을 제출하여 주시기 바랍니다.",
     "corp_biz_old": " - 개인사업자의 경우, 사업자등록증을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
     "corp_reg_miss": " - 법인등기부등본을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
     "corp_reg_view": " - 법인등기부등본을 열람용이 아닌 제출용으로 첨부해주셔야 합니다.",
@@ -126,8 +126,7 @@ default_templates = {
     # 제품 전용 (품질, 공장)
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
     "fac_ceo": "공장등록증의 대표자 명 불일치",
-    "fac_missing": "공장등록증 또는 직접생산증명서를 첨부해 주시기 바랍니다. OEM 생산인 경우 (OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다.",
-    "fac_oem_err": "생산현장증빙서류(OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 세금계산서 등)을 첨부해 주시기 바랍니다."
+    "fac_missing": "공장등록증 또는 직접생산증명서를 제출해 주시기 바랍니다. OEM 생산인 경우 OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 증빙 문서를 제출해 주시기 바랍니다."
 }
 
 # --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
@@ -337,7 +336,6 @@ else:
             if st.checkbox("품질경영(ISO/KS) 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
             if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
             if st.checkbox("공장등록증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
-            if st.checkbox("OEM 계약/세금계산서 오류", key="fac_oem"): results.append(tpl["fac_oem_err"]); total_errors += 1
 
 # --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
