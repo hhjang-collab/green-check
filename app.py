@@ -42,12 +42,6 @@ custom_css = f"""
     /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
     
-    /* 라디오 버튼(오류 내용 등) 3개 이상일 때 자동 줄바꿈 방지 및 간격 조절 */
-    [data-testid="stRadio"] > div[role="radiogroup"] {{
-        flex-wrap: nowrap !important;
-        gap: 0.8rem !important;
-    }}
-    
     /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
     [data-testid="stSidebar"] textarea {{
         font-size: 13px !important;
@@ -92,7 +86,7 @@ default_templates = {
     "ext_tech_name": "기존 녹색기술인증서의 기술명과 연장신청하는 녹색기술의 기술명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 기술명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
     "ext_prod_cert": "기존 녹색기술제품확인서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
     "ext_prod_name": "기존 녹색제품확인서의 제품명과 연장신청하는 녹색기술제품의 제품명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 제품명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
-    "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경을 하시려면 신규로 신청해주셔야 합니다.",
+    "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경 시 신규로 신청해주셔야 합니다.",
 
     # 설명서 오류 (공통 및 분기)
     "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
@@ -132,12 +126,9 @@ default_templates = {
 
 # --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
 def clear_form():
-    # 검토유형(기술/제품), 신청구분(신규/연장), 인증 등 유지할 키 목록
     keep_keys = ["authenticated", "global_type", "req_type"]
-    
     for key in list(st.session_state.keys()):
         if key not in keep_keys:
-            # boolean(체크박스) 타입은 삭제 대신 False로 강제 덮어쓰기하여 UI 동기화
             if isinstance(st.session_state[key], bool):
                 st.session_state[key] = False
             else:
@@ -225,10 +216,9 @@ with col2:
 
 st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
 
-# 플랫한 형태로 결과 문구를 모으는 리스트
 results = []
 total_errors = 0
-tpl = default_templates # 세션 대신 딕셔너리에서 직접 가져옵니다.
+tpl = default_templates 
 
 if global_type == "company":
     st.info("🏢 녹색전문기업은 추후 업데이트 예정입니다.")
@@ -240,21 +230,12 @@ else:
         if st.checkbox("대표자명 불일치", key="ceo_err"):
             results.append(tpl["ceo_err"]); total_errors += 1
             
-        # 사업자/법인 서류 오류 모음
         corp_sub_errors = []
-        if st.checkbox("사업자등록증 미제출", key="biz_miss"):
-            corp_sub_errors.append(tpl["corp_biz_miss"]); total_errors += 1
+        if st.checkbox("사업자등록증 미제출", key="biz_miss"): corp_sub_errors.append(tpl["corp_biz_miss"]); total_errors += 1
+        if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"): corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
+        if st.checkbox("(법인) 법인등기부등본 미제출(3개월 초과)", key="reg_miss"): corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
+        if st.checkbox("법인등기부등본(열람용)", key="reg_view"): corp_sub_errors.append(tpl["corp_reg_view"]); total_errors += 1
             
-        if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"):
-            corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
-            
-        if st.checkbox("(법인) 법인등기부등본 미제출(3개월 초과)", key="reg_miss"):
-            corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
-            
-        if st.checkbox("법인등기부등본(열람용)", key="reg_view"):
-            corp_sub_errors.append(tpl["corp_reg_view"]); total_errors += 1
-            
-        # 하나라도 체크되었다면 메인 문구 하위에 묶어서 1개의 항목으로 출력
         if corp_sub_errors:
             results.append(tpl["corp_reg_main"] + "\n" + "\n".join(corp_sub_errors))
 
@@ -262,57 +243,47 @@ else:
     if req_type == "ext":
         with st.expander(f"2. {type_str} 연장 서류 확인", expanded=True):
             if global_type == "tech":
-                if st.checkbox("인증서/성과보고서 누락", key="ext_t_cert"):
-                    results.append(tpl["ext_tech_cert"]); total_errors += 1
-                if st.checkbox("기술명 불일치 (연장 불가)", key="ext_t_name"):
-                    results.append(tpl["ext_tech_name"]); total_errors += 1
+                if st.checkbox("인증서/성과보고서 누락", key="ext_t_cert"): results.append(tpl["ext_tech_cert"]); total_errors += 1
+                if st.checkbox("기술명 불일치 (연장 불가)", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
             else:
-                if st.checkbox("확인서/성과보고서 누락", key="ext_p_cert"):
-                    results.append(tpl["ext_prod_cert"]); total_errors += 1
-                if st.checkbox("제품명 불일치 (연장 불가)", key="ext_p_name"):
-                    results.append(tpl["ext_prod_name"]); total_errors += 1
-                if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"):
-                    results.append(tpl["ext_prod_model"]); total_errors += 1
+                if st.checkbox("확인서/성과보고서 누락", key="ext_p_cert"): results.append(tpl["ext_prod_cert"]); total_errors += 1
+                if st.checkbox("제품명 불일치 (연장 불가)", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
+                if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
 
     # [3. 설명서 (공통)]
     with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
         st.markdown("**🔹 설명서 오류**")
         cols_doc_err = st.columns(2)
-        if cols_doc_err[0].checkbox("설명서 파일 오류", key="doc_open"):
-            results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
-        if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"):
-            results.append(tpl["doc_missing"]); total_errors += 1
+        if cols_doc_err[0].checkbox("설명서 파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
+        if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
         st.markdown("**🔹 내용 불일치**")
         cols_mismatch_1 = st.columns(2)
-        if cols_mismatch_1[0].checkbox("1p 기술수준", key="doc_lvl"): 
-            results.append(tpl["doc_level_err"]); total_errors += 1
-        if cols_mismatch_1[1].checkbox("1p 기명", key="doc_comp"): 
-            results.append(tpl["doc_comp_err"]); total_errors += 1
+        if cols_mismatch_1[0].checkbox("1p 기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
+        if cols_mismatch_1[1].checkbox("1p 기명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
             
         cols_mismatch_2 = st.columns(2)
         if global_type == "tech":
             with cols_mismatch_2[0]:
-                if st.checkbox("기술명 오류", key="tech_err"):
-                    ans = st.radio("오류 내용", ["명칭 불일치", "제품명 포함"], horizontal=True, key="tech_err_type")
-                    if ans == "명칭 불일치":
-                        results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
-                    elif ans == "제품명 포함":
-                        results.append(tpl["tech_as_prod"]); total_errors += 1
+                tech_err = st.checkbox("기술명 오류", key="tech_err")
+            
+            # 기술명 오류 체크 시 라디오 버튼은 전체 너비로 표시
+            if tech_err:
+                ans = st.radio("오류 내용", ["명칭 불일치", "제품명 포함"], horizontal=True, key="tech_err_type")
+                if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
+                elif ans == "제품명 포함": results.append(tpl["tech_as_prod"]); total_errors += 1
         else:
             with cols_mismatch_2[0]:
-                if st.checkbox("제품명 오류", key="prod_err"):
-                    ans = st.radio("오류 내용", ["명칭 불일치", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
-                    if ans == "명칭 불일치":
-                        results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
-                    elif ans == "기술명 포함":
-                        results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
-                    elif ans == "모델명 포함":
-                        results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
-                        
+                prod_err = st.checkbox("제품명 오류", key="prod_err")
             with cols_mismatch_2[1]:
-                if st.checkbox("모델 스펙/정보 누락", key="prod_model_info"):
-                    results.append(tpl["prod_model_info"]); total_errors += 1
+                if st.checkbox("모델 스펙/정보 누락", key="prod_model_info"): results.append(tpl["prod_model_info"]); total_errors += 1
+                
+            # 제품명 오류 체크 시 라디오 버튼은 전체 너비로 넉넉하게 표시
+            if prod_err:
+                ans = st.radio("오류 내용", ["명칭 불일치", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
+                if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
+                elif ans == "기술명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
+                elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
         st.markdown("**🔹 설명서 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
@@ -336,11 +307,9 @@ else:
             if cols4[0].checkbox("미등록(출원/공개) 상태", key="ip_notreg"): results.append(tpl["ip_not_reg"]); total_errors += 1
             if cols4[1].checkbox("권리자 기업명 불일치", key="ip_own"): results.append(tpl["ip_owner_err"]); total_errors += 1
             
-            # 레이아웃 균형을 위해 일반 체크박스 항목을 좌우로 배치
             if cols4[0].checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
             if cols4[1].checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
             
-            # 입력창이 포함된 항목은 레이아웃 깨짐을 방지하기 위해 하단 단독 라인으로 유지
             if st.checkbox("실시권자 누락 (업체명 기입필요)", key="ip_lic"):
                 comp_name = st.text_input("누락된 업체명 입력", key="ip_lic_name")
                 if comp_name: results.append(tpl["ip_lic_err"].replace("{comp}", f"업체명:{comp_name}")); total_errors += 1
@@ -368,7 +337,6 @@ else:
 with st.sidebar:
     error_count_placeholder.info(f"💡 보완 항목: **{total_errors}개**")
     
-    # 넘버링 적용
     if results:
         numbered_results = [f"{i+1}. {res}" for i, res in enumerate(results)]
         final_output = "\n\n".join(numbered_results)
