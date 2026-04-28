@@ -93,8 +93,12 @@ default_templates = {
     "ext_prod_cert": "기존 녹색기술제품확인서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
     "ext_prod_name": "기존 녹색제품확인서의 제품명과 연장신청하는 녹색기술제품의 제품명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 제품명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
     "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경 시 신규로 신청해주셔야 합니다.",
+    
+    # 전문기업 분기: 연장 서류
+    "ext_comp_cert": "기존 녹색전문기업확인서와 성과분석보고서를 제출해 주시기 바랍니다.",
+    "ext_comp_name": "기존 녹색전문기업확인서의 기업명과 연장신청하는 기업명이 일치하지 않습니다.",
 
-    # 설명서 오류 (공통 및 분기)
+    # 설명서 오류 (공통 및 분기 - 기술/제품)
     "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
     "doc_missing": "녹색인증 홈페이지의 \"규정/서식 > 서식자료실\"에서 \"녹색기술(제품)신청서 및 작성가이드라인(2024)\" 다운로드하여 작성 후 제출해 주시기 바랍니다.",
     "doc_name_err": "{type}명 불일치: {type} 설명서와 시스템 신청서 간 {type}명이 일치하지 않습니다.",
@@ -126,7 +130,12 @@ default_templates = {
     # 제품 전용 (품질, 공장)
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
     "fac_ceo": "사업자등록증과 공장등록증의 대표자 명이 불일치 합니다.",
-    "fac_missing": "공장등록증 또는 직접생산증명서를 제출해 주시기 바랍니다. OEM 생산인 경우 OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 증빙 문서를 제출해 주시기 바랍니다."
+    "fac_missing": "공장등록증 또는 직접생산증명서를 제출해 주시기 바랍니다. OEM 생산인 경우 OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 증빙 문서를 제출해 주시기 바랍니다.",
+    
+    # 전문기업 전용 (필수 서류)
+    "comp_sales_err": "녹색기술 매출비중내역서를 제출해 주시기 바랍니다.",
+    "comp_cpa_err": "공인회계사 또는 세무사 확인서를 제출해 주시기 바랍니다.",
+    "comp_fin_err": "최근 결산이 완료된 재무제표를 제출해 주시기 바랍니다."
 }
 
 # --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
@@ -212,11 +221,12 @@ with col1:
         horizontal=True, key="global_type"
     )
 with col2:
+    # 전문기업도 '연장' 서류가 있으므로 disabled 제거
     req_type = st.radio(
         "신청 구분", 
         ["new", "ext"], 
         format_func=lambda x: "신규" if x == "new" else "연장", 
-        horizontal=True, key="req_type", disabled=(global_type == "company")
+        horizontal=True, key="req_type"
     )
 
 st.markdown('<hr style="margin-top: 5px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
@@ -225,37 +235,38 @@ results = []
 total_errors = 0
 tpl = default_templates 
 
-if global_type == "company":
-    st.info("🏢 녹색전문기업은 추후 업데이트 예정입니다.")
-else:
-    type_str = "기술" if global_type == "tech" else "제품"
+type_str = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
 
-    # [1. 기업 정보 (공통)]
-    with st.expander("1. 기업 정보 오류", expanded=True):
-        if st.checkbox("대표자명 불일치", key="ceo_err"):
-            results.append(tpl["ceo_err"]); total_errors += 1
-            
-        corp_sub_errors = []
-        if st.checkbox("사업자등록증 미제출", key="biz_miss"): corp_sub_errors.append(tpl["corp_biz_miss"]); total_errors += 1
-        if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"): corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
-        if st.checkbox("(법인) 법인등기부등본 미제출(3개월 초과)", key="reg_miss"): corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
-        if st.checkbox("법인등기부등본(열람용)", key="reg_view"): corp_sub_errors.append(tpl["corp_reg_view"]); total_errors += 1
-            
-        if corp_sub_errors:
-            results.append(tpl["corp_reg_main"] + "\n" + "\n".join(corp_sub_errors))
+# [1. 기업 정보 (공통 - 전문기업 포함 적용)]
+with st.expander("1. 기업 정보 오류", expanded=True):
+    if st.checkbox("대표자명 불일치", key="ceo_err"):
+        results.append(tpl["ceo_err"]); total_errors += 1
+        
+    corp_sub_errors = []
+    if st.checkbox("사업자등록증 미제출", key="biz_miss"): corp_sub_errors.append(tpl["corp_biz_miss"]); total_errors += 1
+    if st.checkbox("(개인) 사업자등록증 3개월 초과", key="biz_old"): corp_sub_errors.append(tpl["corp_biz_old"]); total_errors += 1
+    if st.checkbox("(법인) 법인등기부등본 미제출(3개월 초과)", key="reg_miss"): corp_sub_errors.append(tpl["corp_reg_miss"]); total_errors += 1
+    if st.checkbox("법인등기부등본(열람용)", key="reg_view"): corp_sub_errors.append(tpl["corp_reg_view"]); total_errors += 1
+        
+    if corp_sub_errors:
+        results.append(tpl["corp_reg_main"] + "\n" + "\n".join(corp_sub_errors))
 
-    # [2. 연장 서류 (연장 선택 시에만)]
-    if req_type == "ext":
-        with st.expander(f"2. {type_str} 연장 서류 확인", expanded=True):
-            if global_type == "tech":
-                if st.checkbox("인증서/성과보고서 누락", key="ext_t_cert"): results.append(tpl["ext_tech_cert"]); total_errors += 1
-                if st.checkbox("기술명 불일치 (연장 불가)", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
-            else:
-                if st.checkbox("확인서/성과보고서 누락", key="ext_p_cert"): results.append(tpl["ext_prod_cert"]); total_errors += 1
-                if st.checkbox("제품명 불일치 (연장 불가)", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
-                if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
+# [2. 연장 서류 (연장 선택 시에만)]
+if req_type == "ext":
+    with st.expander(f"2. {type_str} 연장 서류 확인", expanded=True):
+        if global_type == "tech":
+            if st.checkbox("인증서/성과보고서 누락", key="ext_t_cert"): results.append(tpl["ext_tech_cert"]); total_errors += 1
+            if st.checkbox("기술명 불일치 (연장 불가)", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
+        elif global_type == "prod":
+            if st.checkbox("확인서/성과보고서 누락", key="ext_p_cert"): results.append(tpl["ext_prod_cert"]); total_errors += 1
+            if st.checkbox("제품명 불일치 (연장 불가)", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
+            if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
+        elif global_type == "company":
+            if st.checkbox("확인서/성과분석보고서 누락", key="ext_c_cert"): results.append(tpl["ext_comp_cert"]); total_errors += 1
+            if st.checkbox("기업명 불일치", key="ext_c_name"): results.append(tpl["ext_comp_name"]); total_errors += 1
 
-    # [3. 설명서 (공통)]
+# [3. 설명서 (공통 - 기술, 제품 전용)]
+if global_type in ["tech", "prod"]:
     with st.expander(f"3. {type_str} 설명서", expanded=True):
         st.markdown("**🔹 설명서 파일**")
         cols_doc_err = st.columns(2)
@@ -302,40 +313,47 @@ else:
         if missing_tocs:
             results.append(tpl["doc_toc_err"].replace("{type}", type_str).replace("{tocs}", ", ".join(missing_tocs)))
 
-    # [4. 지식재산권 (기술 전용)]
-    if global_type == "tech":
-        with st.expander("4. 지식재산권 검토", expanded=True):
-            cols4 = st.columns(2)
-            if cols4[0].checkbox("파일 오류", key="ip_op"): results.append(tpl["ip_open_err"]); total_errors += 1
-            if cols4[1].checkbox("등록원부 누락", key="ip_docs"): results.append(tpl["ip_docs_err"]); total_errors += 1
-            
-            if cols4[0].checkbox("출원/공개 특허", key="ip_notreg"): results.append(tpl["ip_not_reg"]); total_errors += 1
-            if cols4[1].checkbox("권리자 기업명 불일치", key="ip_own"): results.append(tpl["ip_owner_err"]); total_errors += 1
-            
-            if cols4[0].checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
-            if cols4[1].checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
-            
-            if st.checkbox("실시권자 누락 (업체명 기입)", key="ip_lic"):
-                comp_name = st.text_input("누락된 업체명 입력", key="ip_lic_name")
-                if comp_name: results.append(tpl["ip_lic_err"].replace("{comp}", f"업체명:{comp_name}")); total_errors += 1
-                else: results.append(tpl["ip_lic_err"].replace("{comp}", "업체명")); total_errors += 1
+# [4. 지식재산권 (기술 전용)]
+if global_type == "tech":
+    with st.expander("4. 지식재산권 검토", expanded=True):
+        cols4 = st.columns(2)
+        if cols4[0].checkbox("파일 오류", key="ip_op"): results.append(tpl["ip_open_err"]); total_errors += 1
+        if cols4[1].checkbox("등록원부 누락", key="ip_docs"): results.append(tpl["ip_docs_err"]); total_errors += 1
+        
+        if cols4[0].checkbox("출원/공개 특허", key="ip_notreg"): results.append(tpl["ip_not_reg"]); total_errors += 1
+        if cols4[1].checkbox("권리자 기업명 불일치", key="ip_own"): results.append(tpl["ip_owner_err"]); total_errors += 1
+        
+        if cols4[0].checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
+        if cols4[1].checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
+        
+        if st.checkbox("실시권자 누락 (업체명 기입)", key="ip_lic"):
+            comp_name = st.text_input("누락된 업체명 입력", key="ip_lic_name")
+            if comp_name: results.append(tpl["ip_lic_err"].replace("{comp}", f"업체명:{comp_name}")); total_errors += 1
+            else: results.append(tpl["ip_lic_err"].replace("{comp}", "업체명")); total_errors += 1
 
-    # [5. 시험성적서 (기술 전용으로 변경)]
-    if global_type == "tech":
-        with st.expander("5. 시험성적서 검토", expanded=True):
-            st.caption("※ 환경표시인증이 있는 경우 시험성적서 대체 가능")
-            cols5 = st.columns(2)
-            if cols5[0].checkbox("KOLAS 공인기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
-            if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
-            if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
-            if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
+# [5. 시험성적서 (기술 전용)]
+if global_type == "tech":
+    with st.expander("5. 시험성적서 검토", expanded=True):
+        st.caption("※ 환경표시인증이 있는 경우 시험성적서 대체 가능")
+        cols5 = st.columns(2)
+        if cols5[0].checkbox("KOLAS 공인기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
+        if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
+        if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
+        if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
 
-    # [6. 제품 추가 서류 (제품 전용) - 넘버링 수정]
-    if global_type == "prod":
-        with st.expander("4. 제품 추가 서류", expanded=True):
-            if st.checkbox("품질경영 증빙 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
-            if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
-            if st.checkbox("공장등록증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
+# [6. 제품 추가 서류 (제품 전용)]
+if global_type == "prod":
+    with st.expander("4. 제품 추가 서류", expanded=True):
+        if st.checkbox("품질경영 증빙 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
+        if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
+        if st.checkbox("공장등록증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
+
+# [7. 전문기업 필수 서류 (전문기업 전용)]
+if global_type == "company":
+    with st.expander("3. 전문기업 필수 서류", expanded=True):
+        if st.checkbox("매출비중내역서 누락", key="c_sales"): results.append(tpl["comp_sales_err"]); total_errors += 1
+        if st.checkbox("공인회계사/세무사 확인서 누락", key="c_cpa"): results.append(tpl["comp_cpa_err"]); total_errors += 1
+        if st.checkbox("재무제표 누락", key="c_fin"): results.append(tpl["comp_fin_err"]); total_errors += 1
 
 # --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
 with st.sidebar:
