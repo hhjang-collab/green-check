@@ -263,7 +263,8 @@ else:
         if cols_doc_err[0].checkbox("설명서 파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
-        st.markdown("**🔹 내용 불일치**")
+        # 다음 분류(내용 불일치)로 넘어갈 때 위쪽 여백 넉넉하게 추가
+        st.markdown('<div style="margin-top: 25px;"><b>🔹 내용 불일치</b></div>', unsafe_allow_html=True)
         cols_mismatch_1 = st.columns(2)
         if cols_mismatch_1[0].checkbox("1p 기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
         if cols_mismatch_1[1].checkbox("1p 기명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
@@ -289,7 +290,8 @@ else:
                 elif ans == "기술명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
-        st.markdown("**🔹 설명서 목차 누락**")
+        # 다음 분류(설명서 목차 누락)로 넘어갈 때 위쪽 여백 넉넉하게 추가
+        st.markdown('<div style="margin-top: 25px;"><b>🔹 설명서 목차 누락</b></div>', unsafe_allow_html=True)
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
             
