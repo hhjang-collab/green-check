@@ -125,7 +125,7 @@ default_templates = {
 
     # 제품 전용 (품질, 공장)
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
-    "fac_ceo": "공장등록증의 대표자 명 불일치",
+    "fac_ceo": "사업자등록증과 공장등록증의 대표자 명이 불일치 합니다.",
     "fac_missing": "공장등록증 또는 직접생산증명서를 제출해 주시기 바랍니다. OEM 생산인 경우 OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 증빙 문서를 제출해 주시기 바랍니다."
 }
 
@@ -333,7 +333,7 @@ else:
     # [6. 제품 추가 서류 (제품 전용) - 넘버링 수정]
     if global_type == "prod":
         with st.expander("4. 제품 추가 서류", expanded=True):
-            if st.checkbox("품질경영(ISO/KS) 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
+            if st.checkbox("품질경영 증빙 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
             if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
             if st.checkbox("공장등록증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
 
