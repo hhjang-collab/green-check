@@ -124,7 +124,7 @@ default_templates = {
     # 시험성적서 (기술 전용)
     "test_kolas": "시험성적서는 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.",
     "test_old": "최근 3년이내 자료로 제출해주시기 바랍니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 10p. 참조)",
-    "test_self": "자체시험성적서: 공인된 외부기관이 아닌 자체 시험성적서 또는 의뢰자 제시 시험성적서는 사유서를 함께 제출해 주시기 바랍니다.",
+    "test_self": "공인된 외부기관이 아닌 자체 시험성적서 또는 의뢰자 제시 시험성적서는 사유서를 함께 제출해 주시기 바랍니다.",
     "test_client": "시험성적서 상에 모든 신청 업체가 의뢰인(기업)으로 확인되야 합니다. 시험성적서 관련해서 자세한 사항은 평가기관에 문의바랍니다.",
 
     # 제품 전용 (품질, 공장)
@@ -336,7 +336,7 @@ if global_type == "tech":
     with st.expander("5. 시험성적서 검토", expanded=True):
         st.caption("※ 환경표시인증이 있는 경우 시험성적서 대체 가능")
         cols5 = st.columns(2)
-        if cols5[0].checkbox("KOLAS 공인기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
+        if cols5[0].checkbox("공인시기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
         if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
         if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
         if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
