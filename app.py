@@ -109,6 +109,7 @@ default_templates = {
     "ip_not_reg": "등록된 특허로 된 기술의 등록원부로 제출되어야 합니다. (공지사항 내 \"2025년 FAQ 매뉴얼\" 73p. 참조)",
     "ip_lic_err": "특허등록원부의 전용/통상실시권자에 [{comp}]이 존재하지 않습니다.\n * 지식재산권 상의 권리자는 반드시 신청 기업명이어야 합니다. [공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", p.74 참조]",
     "ip_agree_err": "지식재산권 활용동의서: 최종권리자가 다수인 경우 공동권리자의 동의서(서식자료실의 지식재산권 활용 동의서)를 작성해 주셔야 합니다.\n ※ 통상/전용실시권을 받은 경우, 지식재산권 활용동의서의 작성이 필요없음",
+    "ip_ceo_patent": "지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 기업법인과 대표자 명의의 특허일지라도 녹색인증 신청 시, 지식재산권 보유에 대한 권리를 양도, 위임에 대한 계약서를 별첨하거나 실시권을 받아야 합니다.",
 
     # 시험성적서 (기술 전용)
     "test_kolas": "시험성적서는 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.",
@@ -171,7 +172,7 @@ def render_copy_button(text_to_copy):
                 document.body.removeChild(el);
                 
                 btn.innerText = '✅ 복사 완료!';
-                setTimeout(() => {{ btn.innerText = '📋 클릭하여 복사하'; }}, 2000);
+                setTimeout(() => {{ btn.innerText = '📋 클릭하여 복사하기'; }}, 2000);
             }} catch (err) {{
                 console.error("복사 실패", err);
             }}
@@ -325,6 +326,7 @@ else:
                 else: results.append(tpl["ip_lic_err"].replace("{comp}", "업체명")); total_errors += 1
                 
             if st.checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
+            if st.checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
 
     # [5. 시험성적서 (기술 전용으로 변경)]
     if global_type == "tech":
