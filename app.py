@@ -253,14 +253,14 @@ with st.expander("1. 기업 정보 오류", expanded=True):
 
 # [2. 연장 서류 (연장 선택 시에만)]
 if req_type == "ext":
-    with st.expander(f"2. {type_str} 연장 서류 확인", expanded=True):
+    with st.expander(f"2. {type_str} 연장 서류", expanded=True):
         if global_type == "tech":
             if st.checkbox("인증서/성과보고서 누락", key="ext_t_cert"): results.append(tpl["ext_tech_cert"]); total_errors += 1
-            if st.checkbox("기술명 불일치 (연장 불가)", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
+            if st.checkbox("기술명 불일치", key="ext_t_name"): results.append(tpl["ext_tech_name"]); total_errors += 1
         elif global_type == "prod":
             if st.checkbox("확인서/성과보고서 누락", key="ext_p_cert"): results.append(tpl["ext_prod_cert"]); total_errors += 1
-            if st.checkbox("제품명 불일치 (연장 불가)", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
-            if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
+            if st.checkbox("제품명 불일치", key="ext_p_name"): results.append(tpl["ext_prod_name"]); total_errors += 1
+            if st.checkbox("모델 추가/변경", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
         elif global_type == "company":
             if st.checkbox("확인서/성과분석보고서 누락", key="ext_c_cert"): results.append(tpl["ext_comp_cert"]); total_errors += 1
             if st.checkbox("기업명 불일치", key="ext_c_name"): results.append(tpl["ext_comp_name"]); total_errors += 1
