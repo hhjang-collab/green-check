@@ -42,6 +42,12 @@ custom_css = f"""
     /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
     
+    /* 라디오 버튼(오류 내용 등) 3개 이상일 때 자동 줄바꿈 방지 및 간격 조절 */
+    [data-testid="stRadio"] > div[role="radiogroup"] {{
+        flex-wrap: nowrap !important;
+        gap: 0.8rem !important;
+    }}
+    
     /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
     [data-testid="stSidebar"] textarea {{
         font-size: 13px !important;
