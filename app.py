@@ -258,14 +258,12 @@ else:
 
     # [3. 설명서 (공통)]
     with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
-        # 간격을 좀 더 부드럽게 조정 (-5px)
-        st.markdown('<div style="margin-bottom: -5px;"><b>🔹 설명서 오류</b></div>', unsafe_allow_html=True)
+        st.markdown("**🔹 설명서 오류**")
         cols_doc_err = st.columns(2)
         if cols_doc_err[0].checkbox("설명서 파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
-        # 간격을 좀 더 부드럽게 조정 (위 15px, 아래 -5px)
-        st.markdown('<div style="margin-top: 15px; margin-bottom: -5px;"><b>🔹 내용 불일치</b></div>', unsafe_allow_html=True)
+        st.markdown("**🔹 내용 불일치**")
         cols_mismatch_1 = st.columns(2)
         if cols_mismatch_1[0].checkbox("1p 기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
         if cols_mismatch_1[1].checkbox("1p 기명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
@@ -291,8 +289,7 @@ else:
                 elif ans == "기술명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
-        # 간격을 좀 더 부드럽게 조정 (위 15px, 아래 -5px)
-        st.markdown('<div style="margin-top: 15px; margin-bottom: -5px;"><b>🔹 설명서 목차 누락</b></div>', unsafe_allow_html=True)
+        st.markdown("**🔹 설명서 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
             
