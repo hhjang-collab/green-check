@@ -317,16 +317,19 @@ else:
             cols4 = st.columns(2)
             if cols4[0].checkbox("IP 파일 열림 오류", key="ip_op"): results.append(tpl["ip_open_err"]); total_errors += 1
             if cols4[1].checkbox("3종(증/원부/공보) 누락", key="ip_docs"): results.append(tpl["ip_docs_err"]); total_errors += 1
+            
             if cols4[0].checkbox("미등록(출원/공개) 상태", key="ip_notreg"): results.append(tpl["ip_not_reg"]); total_errors += 1
             if cols4[1].checkbox("권리자 기업명 불일치", key="ip_own"): results.append(tpl["ip_owner_err"]); total_errors += 1
             
+            # 레이아웃 균형을 위해 일반 체크박스 항목을 좌우로 배치
+            if cols4[0].checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
+            if cols4[1].checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
+            
+            # 입력창이 포함된 항목은 레이아웃 깨짐을 방지하기 위해 하단 단독 라인으로 유지
             if st.checkbox("실시권자 누락 (업체명 기입필요)", key="ip_lic"):
                 comp_name = st.text_input("누락된 업체명 입력", key="ip_lic_name")
                 if comp_name: results.append(tpl["ip_lic_err"].replace("{comp}", f"업체명:{comp_name}")); total_errors += 1
                 else: results.append(tpl["ip_lic_err"].replace("{comp}", "업체명")); total_errors += 1
-                
-            if st.checkbox("다수권리자 활용동의서 누락", key="ip_agr"): results.append(tpl["ip_agree_err"]); total_errors += 1
-            if st.checkbox("대표자 명의 특허", key="ip_ceo_pat"): results.append(tpl["ip_ceo_patent"]); total_errors += 1
 
     # [5. 시험성적서 (기술 전용으로 변경)]
     if global_type == "tech":
