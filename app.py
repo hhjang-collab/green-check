@@ -42,6 +42,12 @@ custom_css = f"""
     /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
     
+    /* 라디오 버튼(오류 내용 등) 3개 이상일 때 자동 줄바꿈 방지 및 간격 조절 */
+    [data-testid="stRadio"] > div[role="radiogroup"] {{
+        flex-wrap: nowrap !important;
+        gap: 0.8rem !important;
+    }}
+    
     /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
     [data-testid="stSidebar"] textarea {{
         font-size: 13px !important;
@@ -252,12 +258,14 @@ else:
 
     # [3. 설명서 (공통)]
     with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
-        st.markdown("**🔹 설명서 오류**")
+        # 첫 번째 항목 여백 조정 (음수 margin-bottom으로 하위 컬럼을 당김)
+        st.markdown('<div style="margin-bottom: -15px;"><b>🔹 설명서 오류</b></div>', unsafe_allow_html=True)
         cols_doc_err = st.columns(2)
         if cols_doc_err[0].checkbox("설명서 파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
-        st.markdown("**🔹 내용 불일치**")
+        # 두 번째 항목 여백 조정 (위쪽 띄우고, 아래쪽 당김)
+        st.markdown('<div style="margin-top: 25px; margin-bottom: -15px;"><b>🔹 내용 불일치</b></div>', unsafe_allow_html=True)
         cols_mismatch_1 = st.columns(2)
         if cols_mismatch_1[0].checkbox("1p 기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
         if cols_mismatch_1[1].checkbox("1p 기명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
@@ -267,7 +275,6 @@ else:
             with cols_mismatch_2[0]:
                 tech_err = st.checkbox("기술명 오류", key="tech_err")
             
-            # 기술명 오류 체크 시 라디오 버튼은 전체 너비로 표시
             if tech_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "제품명 포함"], horizontal=True, key="tech_err_type")
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
@@ -278,14 +285,14 @@ else:
             with cols_mismatch_2[1]:
                 if st.checkbox("모델 스펙/정보 누락", key="prod_model_info"): results.append(tpl["prod_model_info"]); total_errors += 1
                 
-            # 제품명 오류 체크 시 라디오 버튼은 전체 너비로 넉넉하게 표시
             if prod_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
                 elif ans == "기술명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
-        st.markdown("**🔹 설명서 목차 누락**")
+        # 세 번째 항목 여백 조정
+        st.markdown('<div style="margin-top: 25px; margin-bottom: -15px;"><b>🔹 설명서 목차 누락</b></div>', unsafe_allow_html=True)
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
             
