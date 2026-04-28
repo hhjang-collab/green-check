@@ -134,7 +134,7 @@ default_templates = {
     
     # 전문기업 전용 (필수 서류)
     "comp_sales_err": "녹색기술 매출비중내역서를 제출해 주시기 바랍니다.",
-    "comp_cpa_err": "공인회계사 또는 세무사 확인서를 제출해 주시기 바랍니다.",
+    "comp_cpa_err": "공인회계사 확인서를 지정된 양식으로 작성해주시기 바랍니다. \n ※ 서식자료실의 녹색전문기업확인 구비서류 - 매출비중내역서 및 공인회계사(세무사) 확인서 작성예시 참조",
     "comp_fin_err": "최근 결산이 완료된 재무제표를 제출해 주시기 바랍니다."
 }
 
@@ -343,7 +343,7 @@ if global_type == "tech":
 
 # [6. 제품 추가 서류 (제품 전용)]
 if global_type == "prod":
-    with st.expander("4. 제품 추가 서류", expanded=True):
+    with st.expander("4. 녹색제품 필수 서류", expanded=True):
         if st.checkbox("품질경영 증빙 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
         if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
         if st.checkbox("공장등록증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
