@@ -98,7 +98,7 @@ default_templates = {
     "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
     "doc_missing": "녹색인증 홈페이지의 \"규정/서식 > 서식자료실\"에서 \"녹색기술(제품)신청서 및 작성가이드라인(2024)\" 다운로드하여 작성 후 제출해 주시기 바랍니다.",
     "doc_name_err": "{type}명 불일치: {type} 설명서와 시스템 신청서 간 {type}명이 일치하지 않습니다.",
-    "doc_level_err": "설명서 1p의 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
+    "doc_level_err": "설명서 상 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
@@ -257,14 +257,14 @@ else:
                 if st.checkbox("모델 추가/변경 시도 불가", key="ext_p_model"): results.append(tpl["ext_prod_model"]); total_errors += 1
 
     # [3. 설명서 (공통)]
-    with st.expander(f"3. {type_str} 설명서 검토", expanded=True):
+    with st.expander(f"3. {type_str} 설명서", expanded=True):
         st.markdown("**🔹 설명서 파일**")
         cols_doc_err = st.columns(2)
         if cols_doc_err[0].checkbox("파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
         st.write("") # 자연스러운 빈 줄 간격 추가
-        st.markdown("**🔹 1p 표 오류**")
+        st.markdown("**🔹 내용 오류**")
         cols_mismatch_1 = st.columns(2)
         if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
         if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
@@ -291,7 +291,7 @@ else:
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
         st.write("") # 자연스러운 빈 줄 간격 추가
-        st.markdown("**🔹 서식 목차 누락**")
+        st.markdown("**🔹 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
             
@@ -336,7 +336,7 @@ else:
         with st.expander("4. 제품 추가 서류", expanded=True):
             if st.checkbox("품질경영(ISO/KS) 누락", key="p_iso"): results.append(tpl["prod_iso"]); total_errors += 1
             if st.checkbox("공장등록증 대표자 불일치", key="fac_ceo"): results.append(tpl["fac_ceo"]); total_errors += 1
-            if st.checkbox("공장/직생/OEM 서류 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
+            if st.checkbox("공장드옥증/직접생산증명서/OEM계약서 누락", key="fac_miss"): results.append(tpl["fac_missing"]); total_errors += 1
             if st.checkbox("OEM 계약/세금계산서 오류", key="fac_oem"): results.append(tpl["fac_oem_err"]); total_errors += 1
 
 # --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
