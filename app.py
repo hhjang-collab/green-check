@@ -122,9 +122,9 @@ default_templates = {
     "ip_ceo_patent": "지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 기업법인과 대표자 명의의 특허일지라도 녹색인증 신청 시, 지식재산권 보유에 대한 권리를 양도, 위임에 대한 계약서를 별첨하거나 실시권을 받아야 합니다.",
 
     # 시험성적서 (기술 전용)
-    "test_kolas": "시험성적서는 KOLAS 등 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.\n - 부득이한 경우로 공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
+    "test_kolas": "시험성적서는 KOLAS 등 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.\n - 공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
     "test_old": "최근 3년이내 자료로 제출해주시기 바랍니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 10p. 참조)",
-    "test_self": "부득이한 경우로 공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
+    "test_self": "공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
     "test_client": "시험성적서 상에 모든 신청 업체가 의뢰인(기업)으로 확인되야 합니다. 시험성적서 관련해서 자세한 사항은 평가기관에 문의바랍니다.",
 
     # 제품 전용 (품질, 공장)
@@ -285,9 +285,9 @@ if global_type in ["tech", "prod"]:
                 tech_err = st.checkbox("기술명", key="tech_err")
             
             if tech_err:
-                ans = st.radio("오류 내용", ["명칭 불일치", "제품명 포함"], horizontal=True, key="tech_err_type")
+                ans = st.radio("오류 내용", ["명칭 불일치", "제품명 작성"], horizontal=True, key="tech_err_type")
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
-                elif ans == "제품명 포함": results.append(tpl["tech_as_prod"]); total_errors += 1
+                elif ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
         else:
             with cols_mismatch_2[0]:
                 prod_err = st.checkbox("제품명", key="prod_err")
