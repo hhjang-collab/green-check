@@ -336,7 +336,7 @@ if global_type == "tech":
     with st.expander("5. 시험성적서 검토", expanded=True):
         st.caption("※ 환경표시인증이 있는 경우 시험성적서 대체 가능")
         cols5 = st.columns(2)
-        if cols5[0].checkbox("공인시기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
+        if cols5[0].checkbox("공인시험기관 아님", key="t_kolas"): results.append(tpl["test_kolas"]); total_errors += 1
         if cols5[1].checkbox("3년 초과 자료", key="t_old"): results.append(tpl["test_old"]); total_errors += 1
         if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
         if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
