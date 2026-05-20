@@ -77,7 +77,6 @@ if logo_base64:
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # --- 4. 자동 생성 문구 템플릿 정의 ---
-# 📌 사내 표준 문구가 변경되면 여기서 직접 텍스트를 수정하시면 됩니다.
 default_templates = {
     # 공통: 기업정보
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
@@ -104,6 +103,10 @@ default_templates = {
     "doc_name_err": "{type}명 불일치: {type} 설명서와 시스템 신청서 간 {type}명이 일치하지 않습니다.",
     "doc_level_err": "설명서 상 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
+    
+    # ⭐ [추가 항목] 기술설명서 핵심요소기술 문구
+    "doc_core_tech_err": "설명서(1p): 핵심요소기술의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
+    
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
     "tech_as_prod": "본 신청서는 녹색기술인증 건으로, 기술설명서 양식에 제품명이 아닌 기술명을 시스템과 동일하게 작성해 주시기 바랍니다. \n * 작성 예) OOOO 기술, OOOO 방법",
@@ -184,9 +187,9 @@ def render_copy_button(text_to_copy):
                 
                 btn.innerText = '✅ 복사 완료!';
                 setTimeout(() => {{ btn.innerText = '📋 클릭하여 복사하기'; }}, 2000);
-            }} catch (err) {{
+            } catch (err) {{
                 console.error("복사 실패", err);
-            }}
+            }
         }}
     </script>
     """
@@ -221,7 +224,6 @@ with col1:
         horizontal=True, key="global_type"
     )
 with col2:
-    # 전문기업도 '연장' 서류가 있으므로 disabled 제거
     req_type = st.radio(
         "신청 구분", 
         ["new", "ext"], 
@@ -237,7 +239,7 @@ tpl = default_templates
 
 type_str = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
 
-# [1. 기업 정보 (공통 - 전문기업 포함 적용)]
+# [1. 기업 정보 (공통)]
 with st.expander("1. 기업 정보 오류", expanded=True):
     if st.checkbox("대표자명 불일치", key="ceo_err"):
         results.append(tpl["ceo_err"]); total_errors += 1
@@ -273,22 +275,32 @@ if global_type in ["tech", "prod"]:
         if cols_doc_err[0].checkbox("파일 오류", key="doc_open"): results.append(tpl["doc_open_err"].replace("{type}", type_str)); total_errors += 1
         if cols_doc_err[1].checkbox("설명서 미제출", key="doc_miss"): results.append(tpl["doc_missing"]); total_errors += 1
             
-        st.write("") # 자연스러운 빈 줄 간격 추가
+        st.write("") 
         st.markdown("**🔹 내용 오류**")
-        cols_mismatch_1 = st.columns(2)
-        if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
-        if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
-            
-        cols_mismatch_2 = st.columns(2)
+        
+        # ⭐ [수정된 레이아웃] 기술설명서일 때는 항목이 총 4개(기술수준, 기업명, 기술명, 핵심요소기술)이 되므로 2열 구성으로 최적화합니다.
         if global_type == "tech":
-            with cols_mismatch_2[0]:
-                tech_err = st.checkbox("기술명", key="tech_err")
+            cols_mismatch_tech = st.columns(2)
+            if cols_mismatch_tech[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
+            if cols_mismatch_tech[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
             
+            with cols_mismatch_tech[0]:
+                tech_err = st.checkbox("기술명", key="tech_err")
             if tech_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "제품명 작성"], horizontal=True, key="tech_err_type")
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
                 elif ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
-        else:
+            
+            # 📌 새롭게 추가된 '핵심요소기술' 체크박스
+            if cols_mismatch_tech[1].checkbox("핵심요소기술", key="doc_core_tech"): 
+                results.append(tpl["doc_core_tech_err"]); total_errors += 1
+
+        else: # 제품설명서일 때 (기존 로직 유지)
+            cols_mismatch_1 = st.columns(2)
+            if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
+            if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
+                
+            cols_mismatch_2 = st.columns(2)
             with cols_mismatch_2[0]:
                 prod_err = st.checkbox("제품명", key="prod_err")
             with cols_mismatch_2[1]:
@@ -300,7 +312,7 @@ if global_type in ["tech", "prod"]:
                 elif ans == "기술명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_tech"]); total_errors += 1
                 elif ans == "모델명 포함": results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
 
-        st.write("") # 자연스러운 빈 줄 간격 추가
+        st.write("") 
         st.markdown("**🔹 목차 누락**")
         toc_items = ["1-1", "1-2", "1-3", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "4"]
         if global_type == "prod": toc_items.insert(3, "1-4")
