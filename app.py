@@ -187,9 +187,9 @@ def render_copy_button(text_to_copy):
                 
                 btn.innerText = '✅ 복사 완료!';
                 setTimeout(() => {{ btn.innerText = '📋 클릭하여 복사하기'; }}, 2000);
-            } catch (err) {{
+            }} catch (err) {{  /* 👈 이 부분의 중괄호를 }} 로 수정했습니다 */
                 console.error("복사 실패", err);
-            }
+            }}
         }}
     </script>
     """
