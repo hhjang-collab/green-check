@@ -13,7 +13,10 @@ st.set_page_config(page_title="녹색인증 서류 검토", layout="centered", i
 def save_to_google_sheets(global_type, req_type, total_errors, results):
     try:
         # 1. 구글 API 인증 범위(Scope) 설정
-        scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
         
         # 2. Streamlit Cloud Secrets에서 서비스 계정 정보 로드
         creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
