@@ -243,7 +243,7 @@ def render_copy_button(text_to_copy):
         .copy-btn:hover {{ background-color: #E03E3E; }}
     </style>
     <button class="copy-btn" id="{button_id}" onclick="copyToClipboard()">
-        📋 클릭하여 문구 복사 (클립보드)
+        📋 텍스트 복사
     </button>
     <script>
         function copyToClipboard() {{
