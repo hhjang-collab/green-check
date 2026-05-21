@@ -209,13 +209,21 @@ default_templates = {
 
 # --- 완벽한 체크박스 강제 초기화 로직 ---
 def clear_form():
-    keep_keys = ["authenticated", "global_type", "req_type"]
+    # 📌 [수정] 보호할 키 목록에 초기화 버튼의 key("reset_btn_2") 추가!
+    keep_keys = ["authenticated", "global_type", "req_type", "reset_btn_2"]
+    
     for key in list(st.session_state.keys()):
         if key not in keep_keys:
             if isinstance(st.session_state[key], bool):
-                st.session_state[key] = False
+                try:
+                    st.session_state[key] = False
+                except:
+                    pass # 버튼 등 직접 수정이 불가능한 시스템 키 건너뛰기
             else:
-                del st.session_state[key]
+                try:
+                    del st.session_state[key]
+                except:
+                    pass
     st.session_state["is_saved"] = False
 
 # --- 브라우저 보안에 안전한 인라인 복사 버튼 함수 (JS 활용) ---
