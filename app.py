@@ -477,4 +477,4 @@ with st.sidebar:
     
     # 상시 양식 초기화 버튼
     st.button("🔄 초기화", use_container_width=True, key="reset_btn_2", on_click=clear_form)
-        pass
+    
