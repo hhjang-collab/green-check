@@ -186,7 +186,7 @@ def render_copy_button(text_to_copy):
         .copy-btn:hover {{ opacity: 1; border-color: #FF4B4B; color: #FF4B4B; }}
     </style>
     <button class="copy-btn" id="{button_id}" onclick="copyToClipboard()">
-        📋 클릭하여 문구 복사하기
+        📋 클릭하여 문구 복사
     </button>
     <script>
         const style = window.getComputedStyle(window.parent.document.body);
@@ -220,7 +220,7 @@ def export_dialog(global_type, req_type, total_errors, results, final_output):
     
     # 1. 구글 스프레드시트 저장 영역
     st.markdown("### 1. 데이터 저장")
-    if st.button("내역 저장", use_container_width=True, type="secondary"):
+    if st.button("💾 내역을 시트에 기록", use_container_width=True, type="secondary"):
         with st.spinner("시트에 기록 중..."):
             success = save_to_google_sheets(global_type, req_type, total_errors, results)
         if success:
