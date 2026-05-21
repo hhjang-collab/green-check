@@ -219,21 +219,21 @@ def export_dialog(global_type, req_type, total_errors, results, final_output):
     st.write("📝 **생성된 보완 요청 문구를 구글 시트에 백업하고 복사하세요.**")
     
     # 1. 구글 스프레드시트 저장 영역
-    st.markdown("### 1단계: 데이터 백업")
-    if st.button("🚀 구글 스프레드시트에 내역 저장", use_container_width=True, type="secondary"):
-        with st.spinner("시트에 누적 기록 중..."):
+    st.markdown("### 1. 데이터 저장")
+    if st.button("내역 저장", use_container_width=True, type="secondary"):
+        with st.spinner("시트에 기록 중..."):
             success = save_to_google_sheets(global_type, req_type, total_errors, results)
         if success:
-            st.success("✅ 구글 스프레드시트에 성공적으로 무사히 누적 저장되었습니다!")
+            st.success("✅ 구글 스프레드시트에 무사히 저장되었습니다!")
             
     st.write("")
     
     # 2. 클립보드 복사 영역
-    st.markdown("### 2단계: 문구 복사")
+    st.markdown("### 2. 텍스트 복사")
     render_copy_button(final_output)
     
     st.write("")
-    st.caption("💡 팁: 저장을 먼저 누른 후 복사하기를 진행하면 업무 이력이 유실되지 않습니다.")
+    st.caption("💡 팁: 데이터 백업 후 텍스트 복사하기를 눌러주세요.")
 
 # --- 5. 사이드바 상단 구성 ---
 with st.sidebar:
@@ -418,7 +418,7 @@ with st.sidebar:
     st.text_area("결과 확인", value=final_output, height=450, label_visibility="collapsed")
     
     # 📌 [수정] 원클릭 통합 팝업창을 여는 메인 버튼 배치
-    if st.button("📤 저장 및 복사하기", type="primary", use_container_width=True):
+    if st.button("📤 저장 및 복사", type="primary", use_container_width=True):
         if total_errors > 0 or results:
             export_dialog(global_type, req_type, total_errors, results, final_output)
         else:
