@@ -460,6 +460,13 @@ with st.sidebar:
                         label for key, label in checkbox_labels.items() 
                         if st.session_state.get(key)
                     ]
+                
+                    # 📌 [신규 추가] 목차 누락(toc_로 시작하는 key) 자동 취합 로직
+                    for key in st.session_state.keys():
+                        if key.startswith("toc_") and st.session_state.get(key):
+                            toc_num = key.replace("toc_", "") # 예: toc_1-1 -> 1-1
+                            selected_item_names.append(f"목차누락({toc_num})")
+                            
                     # 시트 저장 함수 호출
                     success = save_to_google_sheets(global_type, req_type, total_errors, selected_item_names)
                     
