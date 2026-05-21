@@ -464,11 +464,7 @@ with st.sidebar:
         # Step 2: 저장이 무사히 끝나면 강렬한 복사 버튼 활성화
         st.success("✅ 저장 성공! 아래 버튼을 클릭해 복사하세요.")
         render_copy_button(final_output)
-        
-        st.write("")
-        # 새로운 검토를 시작하기 위해 리셋하는 보조 버튼 제공
-        st.button("🔄 초기화", use_container_width=True, key="reset_btn_1", on_click=clear_form)
-            
+                    
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
     # 상시 양식 초기화 버튼
