@@ -181,7 +181,7 @@ def render_copy_button(text_to_copy):
             width: 100%; height: 38px;
             background-color: transparent; color: inherit;
             border: 1px solid currentColor; border-radius: 8px; opacity: 0.7;
-            font-size: 14px; cursor: pointer; transition: all 0.2s ease;
+            font-size: 16px; cursor: pointer; transition: all 0.2s ease;
         }}
         .copy-btn:hover {{ opacity: 1; border-color: #FF4B4B; color: #FF4B4B; }}
     </style>
