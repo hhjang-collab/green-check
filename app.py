@@ -69,7 +69,7 @@ def save_to_google_sheets(global_type, req_type, total_errors, selected_items):
         
         # 4. 데이터 정제 및 포맷팅
         kst = timezone(timedelta(hours=9))
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S") # ✅ datetime.now(kst) 로 수정!
         type_kor = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
         req_kor = "신규" if req_type == "new" else "연장"
         
@@ -467,12 +467,10 @@ with st.sidebar:
         
         st.write("")
         # 새로운 검토를 시작하기 위해 리셋하는 보조 버튼 제공
-        if st.button("🔄 새로운 검토 시작 (초기화)", use_container_width=True):
-            clear_form()
-            st.rerun()
+        st.button("🔄 새로운 검토 시작 (초기화)", use_container_width=True, key="reset_btn_1", on_click=clear_form)
             
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
     # 상시 양식 초기화 버튼
-    if st.button("🔄 양식 초기화", use_container_width=True, on_click=clear_form):
+    if st.button("🔄 양식 초기화", use_container_width=True, key="reset_btn_2", on_click=clear_form):
         pass
