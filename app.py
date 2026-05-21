@@ -9,26 +9,73 @@ from datetime import datetime
 # --- 1. 페이지 기본 설정 ---
 st.set_page_config(page_title="녹색인증 서류 검토", layout="centered", initial_sidebar_state="expanded")
 
-# --- [수정] 구글 스프레드시트 누적 저장 함수 ---
+# --- 통계용 구글 시트 저장을 위한 체크박스 key-라벨명 매칭 딕셔너리 ---
+checkbox_labels = {
+    "ceo_err": "대표자명 불일치",
+    "biz_miss": "사업자등록증 미제출",
+    "biz_old": "사업자등록증 3개월 초과",
+    "reg_miss": "법인등기부등본 미제출",
+    "reg_view": "법인등기부등본 열람용",
+    "ext_t_cert": "인증서/성과보고서 누락",
+    "ext_t_name": "기술명 불일치",
+    "ext_p_cert": "확인서/성과보고서 누락",
+    "ext_p_name": "제품명 불일치",
+    "ext_p_model": "모델 추가/변경",
+    "ext_c_cert": "확인서/성과분석보고서 누락",
+    "ext_c_name": "기업명 불일치",
+    "doc_open": "설명서 파일 오류",
+    "doc_miss": "설명서 미제출",
+    "doc_lvl": "기술수준 불일치",
+    "doc_comp": "설명서 기업명 불일치",
+    "doc_core_tech": "핵심요소기술 불일치",
+    "tech_err": "기술명 오류",
+    "prod_err": "제품명 오류",
+    "prod_model_info": "모델정보 누락",
+    "ip_op": "지재권 파일오류",
+    "ip_docs": "등록원부 누락",
+    "ip_notreg": "출원/공개 특허 제출",
+    "ip_own": "권리자 기업명 불일치",
+    "ip_agr": "다수권리자 동의서 누락",
+    "ip_ceo_pat": "대표자 명의 특허",
+    "ip_lic": "실시권자 누락",
+    "t_kolas": "공인시험기관 아님",
+    "t_old": "시험 3년 초과",
+    "t_self": "자체성적서 사유서 누락",
+    "t_client": "시험 의뢰인 불일치",
+    "p_iso": "품질경영 증빙 누락",
+    "fac_ceo": "공장등록증 대표자 불일치",
+    "fac_miss": "생산증명 증빙 누락",
+    "c_sales": "매출비중내역서 누락",
+    "c_cpa": "공인회계사 확인서 누락",
+    "c_fin": "재무제표 누락",
+}
+
+# --- 구글 스프레드시트 누적 저장 함수 ---
 def save_to_google_sheets(global_type, req_type, total_errors, selected_items):
     try:
+        # 1. 구글 API 인증 범위(Scope) 설정
         scopes = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ]
+        
+        # 2. Streamlit Cloud Secrets에서 서비스 계정 정보 로드
         creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
         client = gspread.authorize(creds)
         
+        # 3. 구글 스프레드시트 열기
         sheet_name = st.secrets.get("GOOGLE_SHEET_NAME", "녹색인증_검토이력")
         sheet = client.open(sheet_name).sheet1
         
+        # 4. 데이터 정제 및 포맷팅
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         type_kor = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
         req_kor = "신규" if req_type == "new" else "연장"
         
-        # 📌 수정된 부분: 긴 문장 대신 선택된 항목 이름들을 쉼표로 연결하여 저장
+        # 📌 [수정] 긴 문장 대신 선택된 통계용 항목 이름들을 쉼표로 연결하여 저장
         items_str = ", ".join(selected_items) if selected_items else "오류 없음"
         
+        # 5. 시트 맨 아래에 행 추가
         sheet.append_row([current_time, type_kor, req_kor, total_errors, items_str])
         return True
     except Exception as e:
@@ -53,6 +100,10 @@ if not st.session_state["authenticated"]:
             else:
                 st.error("비밀번호가 일치하지 않습니다.")
     st.stop()
+
+# --- 저장 완료 상태 및 초기 세션 관리 ---
+if "is_saved" not in st.session_state:
+    st.session_state["is_saved"] = False
 
 # --- 3. UI 최적화 및 회사 로고 설정 ---
 def get_base64_of_bin_file(bin_file):
@@ -155,7 +206,7 @@ default_templates = {
     "comp_fin_err": "최근 결산이 완료된 재무제표를 제출해 주시기 바랍니다."
 }
 
-# --- 완벽한 체크박스 강제 초기화 로직 (Foolproof) ---
+# --- 완벽한 체크박스 강제 초기화 로직 ---
 def clear_form():
     keep_keys = ["authenticated", "global_type", "req_type"]
     for key in list(st.session_state.keys()):
@@ -164,8 +215,9 @@ def clear_form():
                 st.session_state[key] = False
             else:
                 del st.session_state[key]
+    st.session_state["is_saved"] = False
 
-# --- 커스텀 스마트 복사 버튼 (JS 활용) ---
+# --- 브라우저 보안에 안전한 인라인 복사 버튼 함수 (JS 활용) ---
 def render_copy_button(text_to_copy):
     b64_text = base64.b64encode(text_to_copy.encode("utf-8")).decode("utf-8")
     button_id = "copyButton"
@@ -175,20 +227,16 @@ def render_copy_button(text_to_copy):
         .copy-btn {{
             display: flex; align-items: center; justify-content: center;
             width: 100%; height: 38px;
-            background-color: transparent; color: inherit;
-            border: 1px solid currentColor; border-radius: 8px; opacity: 0.7;
-            font-size: 16px; cursor: pointer; transition: all 0.2s ease;
+            background-color: #FF4B4B; color: white;
+            border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
         }}
-        .copy-btn:hover {{ opacity: 1; border-color: #FF4B4B; color: #FF4B4B; }}
+        .copy-btn:hover {{ background-color: #E03E3E; }}
     </style>
     <button class="copy-btn" id="{button_id}" onclick="copyToClipboard()">
-        📋 클릭하여 문구 복사
+        📋 클릭하여 문구 복사 (클립보드)
     </button>
     <script>
-        const style = window.getComputedStyle(window.parent.document.body);
-        const btn = document.getElementById('{button_id}');
-        btn.style.color = style.color;
-        
         function copyToClipboard() {{
             try {{
                 const text = decodeURIComponent(escape(window.atob('{b64_text}')));
@@ -199,8 +247,9 @@ def render_copy_button(text_to_copy):
                 document.execCommand('copy');
                 document.body.removeChild(el);
                 
+                const btn = document.getElementById('{button_id}');
                 btn.innerText = '✅ 복사 완료!';
-                setTimeout(() => {{ btn.innerText = '📋 클릭하여 문구 복사하기'; }}, 2000);
+                btn.style.backgroundColor = '#28A745';
             }} catch (err) {{
                 console.error("복사 실패", err);
             }}
@@ -208,28 +257,6 @@ def render_copy_button(text_to_copy):
     </script>
     """
     components.html(html_str, height=45)
-
-# --- [신규 추가] 저장 및 복사 통합 모달 팝업창 UI ---
-@st.dialog("💾 검토 결과 내보내기")
-def export_dialog(global_type, req_type, total_errors, results, final_output):
-    st.write("📝 **생성된 보완 요청 문구를 구글 시트에 백업하고 복사하세요.**")
-    
-    # 1. 구글 스프레드시트 저장 영역
-    st.markdown("### 1. 데이터 저장")
-    if st.button("💾 내역을 시트에 기록", use_container_width=True, type="secondary"):
-        with st.spinner("시트에 기록 중..."):
-            success = save_to_google_sheets(global_type, req_type, total_errors, results)
-        if success:
-            st.success("✅ 구글 스프레드시트에 무사히 저장되었습니다!")
-            
-    st.write("")
-    
-    # 2. 클립보드 복사 영역
-    st.markdown("### 2. 텍스트 복사")
-    render_copy_button(final_output)
-    
-    st.write("")
-    st.caption("💡 팁: 데이터 백업 후 텍스트 복사하기를 눌러주세요.")
 
 # --- 5. 사이드바 상단 구성 ---
 with st.sidebar:
@@ -401,7 +428,7 @@ if global_type == "company":
         if st.checkbox("공인회계사/세무사 확인서 누락", key="c_cpa"): results.append(tpl["comp_cpa_err"]); total_errors += 1
         if st.checkbox("재무제표 누락", key="c_fin"): results.append(tpl["comp_fin_err"]); total_errors += 1
 
-# --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
+# --- 7. 사이드바 하단 (결과 출력 및 인라인 2-Step 버튼) ---
 with st.sidebar:
     error_count_placeholder.info(f"💡 보완 항목: **{total_errors}개**")
     
@@ -411,16 +438,40 @@ with st.sidebar:
     else:
         final_output = "오류 항목을 체크하시면,\n여기에 보완 요청 텍스트가 작성됩니다."
         
-    st.text_area("결과 확인", value=final_output, height=450, label_visibility="collapsed")
+    st.text_area("결과 확인", value=final_output, height=400, label_visibility="collapsed")
     
-    # 📌 [수정] 원클릭 통합 팝업창을 여는 메인 버튼 배치
-    if st.button("📤 저장 및 복사", type="primary", use_container_width=True):
-        if total_errors > 0 or results:
-            export_dialog(global_type, req_type, total_errors, results, final_output)
-        else:
-            st.warning("⚠️ 선택된 보완 항목이 없습니다.")
-    
+    # 📌 [수정] 인라인 2-Step 저장 및 복사 로직 설계
+    if not st.session_state["is_saved"]:
+        # Step 1: 시트에 저장 버튼 활성화
+        if st.button("💾 검토 결과 시트에 기록", type="primary", use_container_width=True):
+            if total_errors > 0 or results:
+                with st.spinner("구글 시트에 백업 중..."):
+                    # session_state를 대조해 현재 활성화(True)된 체크박스의 통계용 라벨만 리스트로 취합
+                    selected_item_names = [
+                        label for key, label in checkbox_labels.items() 
+                        if st.session_state.get(key)
+                    ]
+                    # 시트 저장 함수 호출
+                    success = save_to_google_sheets(global_type, req_type, total_errors, selected_item_names)
+                    
+                    if success:
+                        st.session_state["is_saved"] = True
+                        st.rerun() # 저장 성공 시 화면을 새로고침하여 복사 버튼으로 교체
+            else:
+                st.warning("⚠️ 선택된 보완 항목이 없습니다.")
+    else:
+        # Step 2: 저장이 무사히 끝나면 강렬한 복사 버튼 활성화
+        st.success("✅ 시트 저장 성공! 아래 버튼을 눌러 복사하세요.")
+        render_copy_button(final_output)
+        
+        st.write("")
+        # 새로운 검토를 시작하기 위해 리셋하는 보조 버튼 제공
+        if st.button("🔄 새로운 검토 시작 (초기화)", use_container_width=True):
+            clear_form()
+            st.rerun()
+            
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
-    if st.button("🔄 초기화", use_container_width=True, on_click=clear_form):
+    # 상시 양식 초기화 버튼
+    if st.button("🔄 양식 초기화", use_container_width=True, on_click=clear_form):
         pass
