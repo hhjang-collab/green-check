@@ -4,7 +4,7 @@ import base64
 import os
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 # --- 1. 페이지 기본 설정 ---
 st.set_page_config(page_title="녹색인증 서류 검토", layout="centered", initial_sidebar_state="expanded")
@@ -68,6 +68,7 @@ def save_to_google_sheets(global_type, req_type, total_errors, selected_items):
         sheet = client.open(sheet_name).sheet1
         
         # 4. 데이터 정제 및 포맷팅
+        kst = timezone(timedelta(hours=9))
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         type_kor = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
         req_kor = "신규" if req_type == "new" else "연장"
