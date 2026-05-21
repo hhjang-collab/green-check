@@ -9,31 +9,27 @@ from datetime import datetime
 # --- 1. 페이지 기본 설정 ---
 st.set_page_config(page_title="녹색인증 서류 검토", layout="centered", initial_sidebar_state="expanded")
 
-# --- [신규 추가] 구글 스프레드시트 누적 저장 함수 ---
-def save_to_google_sheets(global_type, req_type, total_errors, results):
+# --- [수정] 구글 스프레드시트 누적 저장 함수 ---
+def save_to_google_sheets(global_type, req_type, total_errors, selected_items):
     try:
-        # 1. 구글 API 인증 범위(Scope) 설정
         scopes = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ]
-        
-        # 2. Streamlit Cloud Secrets에서 서비스 계정 정보 로드
         creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
         client = gspread.authorize(creds)
         
-        # 3. 구글 스프레드시트 열기 (Secrets에 설정된 이름을 쓰거나 기본값 사용)
         sheet_name = st.secrets.get("GOOGLE_SHEET_NAME", "녹색인증_검토이력")
         sheet = client.open(sheet_name).sheet1
         
-        # 4. 데이터 정제 및 포맷팅
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         type_kor = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
         req_kor = "신규" if req_type == "new" else "연장"
-        results_str = "\n".join(results) if results else "오류 없음"
         
-        # 5. 시트 맨 아래에 행 추가
-        sheet.append_row([current_time, type_kor, req_kor, total_errors, results_str])
+        # 📌 수정된 부분: 긴 문장 대신 선택된 항목 이름들을 쉼표로 연결하여 저장
+        items_str = ", ".join(selected_items) if selected_items else "오류 없음"
+        
+        sheet.append_row([current_time, type_kor, req_kor, total_errors, items_str])
         return True
     except Exception as e:
         st.error(f"❌ 구글 시트 저장 실패: {e}")
