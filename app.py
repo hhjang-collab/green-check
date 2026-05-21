@@ -444,9 +444,9 @@ with st.sidebar:
     # 📌 [수정] 인라인 2-Step 저장 및 복사 로직 설계
     if not st.session_state["is_saved"]:
         # Step 1: 시트에 저장 버튼 활성화
-        if st.button("💾 검토 결과 시트에 기록", type="primary", use_container_width=True):
+        if st.button("💾 검토 결과 기록", type="primary", use_container_width=True):
             if total_errors > 0 or results:
-                with st.spinner("구글 시트에 백업 중..."):
+                with st.spinner("구글 시트에 기록 중..."):
                     # session_state를 대조해 현재 활성화(True)된 체크박스의 통계용 라벨만 리스트로 취합
                     selected_item_names = [
                         label for key, label in checkbox_labels.items() 
@@ -462,7 +462,7 @@ with st.sidebar:
                 st.warning("⚠️ 선택된 보완 항목이 없습니다.")
     else:
         # Step 2: 저장이 무사히 끝나면 강렬한 복사 버튼 활성화
-        st.success("✅ 시트 저장 성공! 아래 버튼을 눌러 복사하세요.")
+        st.success("✅ 저장 성공! 아래 버튼을 클릭해 복사하세요.")
         render_copy_button(final_output)
         
         st.write("")
