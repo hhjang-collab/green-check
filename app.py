@@ -476,5 +476,5 @@ with st.sidebar:
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
     # 상시 양식 초기화 버튼
-    if st.button("🔄 초기화", use_container_width=True, key="reset_btn_2", on_click=clear_form):
+    st.button("🔄 초기화", use_container_width=True, key="reset_btn_2", on_click=clear_form)
         pass
