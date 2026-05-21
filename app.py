@@ -2,9 +2,39 @@ import streamlit as st
 import streamlit.components.v1 as components
 import base64
 import os
+import gspread
+from google.oauth2.service_account import Credentials
+from datetime import datetime
 
 # --- 1. 페이지 기본 설정 ---
 st.set_page_config(page_title="녹색인증 서류 검토", layout="centered", initial_sidebar_state="expanded")
+
+# --- [신규 추가] 구글 스프레드시트 누적 저장 함수 ---
+def save_to_google_sheets(global_type, req_type, total_errors, results):
+    try:
+        # 1. 구글 API 인증 범위(Scope) 설정
+        scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+        
+        # 2. Streamlit Cloud Secrets에서 서비스 계정 정보 로드
+        creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
+        client = gspread.authorize(creds)
+        
+        # 3. 구글 스프레드시트 열기 (Secrets에 설정된 이름을 쓰거나 기본값 사용)
+        sheet_name = st.secrets.get("GOOGLE_SHEET_NAME", "녹색인증_검토이력")
+        sheet = client.open(sheet_name).sheet1
+        
+        # 4. 데이터 정제 및 포맷팅
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        type_kor = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
+        req_kor = "신규" if req_type == "new" else "연장"
+        results_str = "\n".join(results) if results else "오류 없음"
+        
+        # 5. 시트 맨 아래에 행 추가
+        sheet.append_row([current_time, type_kor, req_kor, total_errors, results_str])
+        return True
+    except Exception as e:
+        st.error(f"❌ 구글 시트 저장 실패: {e}")
+        return False
 
 # --- 2. 보안 (비밀번호) 로직 ---
 if "authenticated" not in st.session_state:
@@ -17,7 +47,6 @@ if not st.session_state["authenticated"]:
         submitted = st.form_submit_button("확인")
         
         if submitted:
-            # 📌 [수정 필요] Streamlit Cloud의 Secrets에 APP_PASSWORD를 설정해 주세요.
             expected_pwd = st.secrets.get("APP_PASSWORD", "1234") 
             if pwd == expected_pwd:
                 st.session_state["authenticated"] = True
@@ -34,27 +63,22 @@ def get_base64_of_bin_file(bin_file):
         return base64.b64encode(data).decode()
     return ""
 
-# 📌 [수정 필요] 실제 로고 파일 경로로 맞추어 주세요.
 logo_base64 = get_base64_of_bin_file("company_logo.png") 
 
 custom_css = f"""
 <style>
-    /* 입력창 하단 불필요한 안내 문구 숨김 */
     [data-testid="InputInstructions"] {{display: none !important;}}
     
-    /* 라디오 버튼(오류 내용 등) 3개 이상일 때 자동 줄바꿈 방지 및 간격 조절 */
     [data-testid="stRadio"] > div[role="radiogroup"] {{
         flex-wrap: nowrap !important;
         gap: 0.8rem !important;
     }}
     
-    /* 사이드바 텍스트 에어리어 폰트 크기 및 줄간격 조절 */
     [data-testid="stSidebar"] textarea {{
         font-size: 13px !important;
         line-height: 1.6 !important;
     }}
     
-    /* 우측 상단 회사 로고 고정 */
     .company-logo {{
         position: fixed;
         top: 70px;
@@ -78,7 +102,6 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 # --- 4. 자동 생성 문구 템플릿 정의 ---
 default_templates = {
-    # 공통: 기업정보
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
     "corp_reg_main": "사업자등록증, 법인등기부등본은 기업으로 로그인하여 회원정보 수정란에서 첨부해 주시기 바랍니다.",
     "corp_biz_miss": " - 사업자등록증을 제출하여 주시기 바랍니다.",
@@ -86,25 +109,21 @@ default_templates = {
     "corp_reg_miss": " - 법인등기부등본을 최근 3개월 이내 발행본으로 제출해 주시기 바랍니다.",
     "corp_reg_view": " - 법인등기부등본을 열람용이 아닌 제출용으로 첨부해주셔야 합니다.",
     
-    # 공통/분기: 연장 서류
     "ext_tech_cert": "기존 녹색기술인증서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
     "ext_tech_name": "기존 녹색기술인증서의 기술명과 연장신청하는 녹색기술의 기술명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 기술명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
     "ext_prod_cert": "기존 녹색기술제품확인서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
     "ext_prod_name": "기존 녹색제품확인서의 제품명과 연장신청하는 녹색기술제품의 제품명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 제품명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
     "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경 시 신규로 신청해주셔야 합니다.",
     
-    # 전문기업 분기: 연장 서류
     "ext_comp_cert": "기존 녹색전문기업확인서와 성과분석보고서를 제출해 주시기 바랍니다.",
     "ext_comp_name": "기존 녹색전문기업확인서의 기업명과 연장신청하는 기업명이 일치하지 않습니다.",
 
-    # 설명서 오류 (공통 및 분기 - 기술/제품)
     "doc_open_err": "신청 {type} 설명서 파일이 열리지 않습니다. 다시 올려주시기 바랍니다.",
     "doc_missing": "녹색인증 홈페이지의 \"규정/서식 > 서식자료실\"에서 \"녹색기술(제품)신청서 및 작성가이드라인(2024)\" 다운로드하여 작성 후 제출해 주시기 바랍니다.",
     "doc_name_err": "{type}명 불일치: {type} 설명서와 시스템 신청서 간 {type}명이 일치하지 않습니다.",
     "doc_level_err": "설명서 상 기술수준의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
     
-    # ⭐ [추가 항목] 기술설명서 핵심요소기술 문구
     "doc_core_tech_err": "설명서(1p): 핵심요소기술의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
     
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
@@ -115,7 +134,6 @@ default_templates = {
     "prod_inc_model": " - 신청 제품 설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
     "prod_model_info": "모델정보 누락: 신청모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (설명서 또는 붙임)",
 
-    # 지식재산권 (기술)
     "ip_open_err": "파일이 오류가 있어 열람할 수 없습니다.",
     "ip_docs_err": "지식재산권 등록은 특허등록원부로 제출해 주시기 바랍니다.",
     "ip_owner_err": "지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 이전 기업명이면 수정하여 제출해 주셔야 합니다.",
@@ -124,18 +142,15 @@ default_templates = {
     "ip_agree_err": "지식재산권 활용동의서: 최종권리자가 다수인 경우 공동권리자의 동의서(서식자료실의 지식재산권 활용 동의서)를 작성해 주셔야 합니다.\n ※ 통상/전용실시권을 받은 경우, 지식재산권 활용동의서의 작성이 필요없음",
     "ip_ceo_patent": "지식재산권 상의 권리자는 반드시 신청 기업명 이어야 합니다. 기업법인과 대표자 명의의 특허일지라도 녹색인증 신청 시, 지식재산권 보유에 대한 권리를 양도, 위임에 대한 계약서를 별첨하거나 실시권을 받아야 합니다.",
 
-    # 시험성적서 (기술 전용)
     "test_kolas": "시험성적서는 KOLAS 등 공인 시험성적기관에서 진행한 서류로 제출해주시기 바랍니다.\n - 공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
     "test_old": "최근 3년이내 자료로 제출해주시기 바랍니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 10p. 참조)",
     "test_self": "공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
     "test_client": "시험성적서 상에 모든 신청 업체가 의뢰인(기업)으로 확인되야 합니다. 시험성적서 관련해서 자세한 사항은 평가기관에 문의바랍니다.",
 
-    # 제품 전용 (품질, 공장)
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
     "fac_ceo": "사업자등록증과 공장등록증의 대표자 명이 불일치 합니다.",
     "fac_missing": "공장등록증 또는 직접생산증명서를 제출해 주시기 바랍니다. OEM 생산인 경우 OEM계약서 또는 OEM 제조의뢰사실을 증빙할 수 있는 증빙 문서를 제출해 주시기 바랍니다.",
     
-    # 전문기업 전용 (필수 서류)
     "comp_sales_err": "녹색기술 매출비중내역서를 제출해 주시기 바랍니다.",
     "comp_cpa_err": "공인회계사 확인서를 지정된 양식으로 작성해주시기 바랍니다.\n - 서식자료실의 녹색전문기업확인 구비서류 중 매출비중내역서 및 공인회계사(세무사) 확인서 작성예시 참조",
     "comp_fin_err": "최근 결산이 완료된 재무제표를 제출해 주시기 바랍니다."
@@ -168,7 +183,7 @@ def render_copy_button(text_to_copy):
         .copy-btn:hover {{ opacity: 1; border-color: #FF4B4B; color: #FF4B4B; }}
     </style>
     <button class="copy-btn" id="{button_id}" onclick="copyToClipboard()">
-        📋 클릭하여 복사하기
+        📋 클릭하여 문구 복사하기
     </button>
     <script>
         const style = window.getComputedStyle(window.parent.document.body);
@@ -186,14 +201,36 @@ def render_copy_button(text_to_copy):
                 document.body.removeChild(el);
                 
                 btn.innerText = '✅ 복사 완료!';
-                setTimeout(() => {{ btn.innerText = '📋 클릭하여 복사하기'; }}, 2000);
-            }} catch (err) {{  /* 👈 이 부분의 중괄호를 }} 로 수정했습니다 */
+                setTimeout(() => {{ btn.innerText = '📋 클릭하여 문구 복사하기'; }}, 2000);
+            }} catch (err) {{
                 console.error("복사 실패", err);
             }}
         }}
     </script>
     """
     components.html(html_str, height=45)
+
+# --- [신규 추가] 저장 및 복사 통합 모달 팝업창 UI ---
+@st.dialog("💾 검토 결과 내보내기")
+def export_dialog(global_type, req_type, total_errors, results, final_output):
+    st.write("📝 **생성된 보완 요청 문구를 구글 시트에 백업하고 복사하세요.**")
+    
+    # 1. 구글 스프레드시트 저장 영역
+    st.markdown("### 1단계: 데이터 백업")
+    if st.button("🚀 구글 스프레드시트에 내역 저장", use_container_width=True, type="secondary"):
+        with st.spinner("시트에 누적 기록 중..."):
+            success = save_to_google_sheets(global_type, req_type, total_errors, results)
+        if success:
+            st.success("✅ 구글 스프레드시트에 성공적으로 무사히 누적 저장되었습니다!")
+            
+    st.write("")
+    
+    # 2. 클립보드 복사 영역
+    st.markdown("### 2단계: 문구 복사")
+    render_copy_button(final_output)
+    
+    st.write("")
+    st.caption("💡 팁: 저장을 먼저 누른 후 복사하기를 진행하면 업무 이력이 유실되지 않습니다.")
 
 # --- 5. 사이드바 상단 구성 ---
 with st.sidebar:
@@ -278,7 +315,6 @@ if global_type in ["tech", "prod"]:
         st.write("") 
         st.markdown("**🔹 내용 오류**")
         
-        # ⭐ [수정된 레이아웃] 기술설명서일 때는 항목이 총 4개(기술수준, 기업명, 기술명, 핵심요소기술)이 되므로 2열 구성으로 최적화합니다.
         if global_type == "tech":
             cols_mismatch_tech = st.columns(2)
             if cols_mismatch_tech[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
@@ -291,11 +327,10 @@ if global_type in ["tech", "prod"]:
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
                 elif ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
             
-            # 📌 새롭게 추가된 '핵심요소기술' 체크박스
             if cols_mismatch_tech[1].checkbox("핵심요소기술", key="doc_core_tech"): 
                 results.append(tpl["doc_core_tech_err"]); total_errors += 1
 
-        else: # 제품설명서일 때 (기존 로직 유지)
+        else:
             cols_mismatch_1 = st.columns(2)
             if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
             if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
@@ -379,7 +414,12 @@ with st.sidebar:
         
     st.text_area("결과 확인", value=final_output, height=450, label_visibility="collapsed")
     
-    render_copy_button(final_output)
+    # 📌 [수정] 원클릭 통합 팝업창을 여는 메인 버튼 배치
+    if st.button("📤 저장 및 복사하기", type="primary", use_container_width=True):
+        if total_errors > 0 or results:
+            export_dialog(global_type, req_type, total_errors, results, final_output)
+        else:
+            st.warning("⚠️ 선택된 보완 항목이 없습니다.")
     
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
