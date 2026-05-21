@@ -401,26 +401,31 @@ if global_type == "company":
         if st.checkbox("공인회계사/세무사 확인서 누락", key="c_cpa"): results.append(tpl["comp_cpa_err"]); total_errors += 1
         if st.checkbox("재무제표 누락", key="c_fin"): results.append(tpl["comp_fin_err"]); total_errors += 1
 
-# --- 7. 사이드바 하단 (결과 출력 및 버튼들) ---
+# --- 사이드바 하단 버튼 로직 ---
 with st.sidebar:
-    error_count_placeholder.info(f"💡 보완 항목: **{total_errors}개**")
+    # ... (결과 텍스트 출력 부분은 기존과 동일) ...
     
-    if results:
-        numbered_results = [f"{i+1}. {res}" for i, res in enumerate(results)]
-        final_output = "\n\n".join(numbered_results)
+    # 세션 스테이트에 저장 완료 상태를 기록 (최상단에 선언 필요: st.session_state.setdefault("is_saved", False))
+    if not st.session_state.get("is_saved", False):
+        if st.button("💾 검토 결과 시트에 기록", type="primary", use_container_width=True):
+            if total_errors > 0 or results:
+                with st.spinner("구글 시트에 저장 중..."):
+                    # 1번 질문에서 수정한 통계용 데이터 저장 로직 실행
+                    selected_item_names = [label for key, label in checkbox_labels.items() if st.session_state.get(key)]
+                    success = save_to_google_sheets(global_type, req_type, total_errors, selected_item_names)
+                    
+                    if success:
+                        st.session_state["is_saved"] = True
+                        st.rerun() # 화면을 새로고침하여 복사 버튼을 띄움
+            else:
+                st.warning("⚠️ 선택된 보완 항목이 없습니다.")
     else:
-        final_output = "오류 항목을 체크하시면,\n여기에 보완 요청 텍스트가 작성됩니다."
+        # 저장이 완료된 상태면 복사 버튼만 보여줌
+        st.success("✅ 시트 저장 완료! 텍스트를 복사하세요.")
+        render_copy_button(final_output) # 기존에 만들어두신 훌륭한 JS 복사 버튼 재활용
         
-    st.text_area("결과 확인", value=final_output, height=450, label_visibility="collapsed")
-    
-    # 📌 [수정] 원클릭 통합 팝업창을 여는 메인 버튼 배치
-    if st.button("📤 저장 및 복사", type="primary", use_container_width=True):
-        if total_errors > 0 or results:
-            export_dialog(global_type, req_type, total_errors, results, final_output)
-        else:
-            st.warning("⚠️ 선택된 보완 항목이 없습니다.")
-    
-    st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
-    
-    if st.button("🔄 초기화", use_container_width=True, on_click=clear_form):
-        pass
+        st.write("")
+        if st.button("🔄 새로운 검토 시작", use_container_width=True):
+            st.session_state["is_saved"] = False
+            clear_form()
+            st.rerun()
