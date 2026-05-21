@@ -449,22 +449,26 @@ with st.sidebar:
         
     st.text_area("결과 확인", value=final_output, height=400, label_visibility="collapsed")
     
-    # 📌 [수정] 인라인 2-Step 저장 및 복사 로직 설계
+    # 📌 [핵심 추가] 내용 변경 감지 로직!
+    # 저장이 완료된 상태인데, 현재 텍스트가 방금 저장한 텍스트와 다르다면? (체크박스를 건드렸다면)
+    if st.session_state["is_saved"] and st.session_state.get("saved_text") != final_output:
+        st.session_state["is_saved"] = False # 즉시 저장 상태를 해제해서 기록 버튼을 다시 띄움!
+    
+    # 인라인 2-Step 저장 및 복사 로직
     if not st.session_state["is_saved"]:
         # Step 1: 시트에 저장 버튼 활성화
         if st.button("💾 검토 결과 기록", type="primary", use_container_width=True):
             if total_errors > 0 or results:
                 with st.spinner("구글 시트에 기록 중..."):
-                    # session_state를 대조해 현재 활성화(True)된 체크박스의 통계용 라벨만 리스트로 취합
                     selected_item_names = [
                         label for key, label in checkbox_labels.items() 
                         if st.session_state.get(key)
                     ]
-                
-                    # 📌 [신규 추가] 목차 누락(toc_로 시작하는 key) 자동 취합 로직
+                    
+                    # (이전 질문에서 추가한 목차 자동 추출 로직)
                     for key in st.session_state.keys():
                         if key.startswith("toc_") and st.session_state.get(key):
-                            toc_num = key.replace("toc_", "") # 예: toc_1-1 -> 1-1
+                            toc_num = key.replace("toc_", "")
                             selected_item_names.append(f"목차누락({toc_num})")
                             
                     # 시트 저장 함수 호출
@@ -472,7 +476,8 @@ with st.sidebar:
                     
                     if success:
                         st.session_state["is_saved"] = True
-                        st.rerun() # 저장 성공 시 화면을 새로고침하여 복사 버튼으로 교체
+                        st.session_state["saved_text"] = final_output # 📌 [추가] 저장할 때의 완벽한 텍스트를 기억함
+                        st.rerun() 
             else:
                 st.warning("⚠️ 선택된 보완 항목이 없습니다.")
     else:
