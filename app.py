@@ -182,7 +182,7 @@ default_templates = {
     "tech_as_prod": "본 신청서는 녹색기술인증 건으로, 기술설명서 양식에 제품명이 아닌 기술명을 시스템과 동일하게 작성해 주시기 바랍니다. \n * 작성 예) OOOO 기술, OOOO 방법",
     "prod_as_tech": "본 신청서는 녹색기술제품확인 건으로, 제품 설명서 양식에 기술명이 아닌 제품명을 시스템과 동일하게 작성해 주시기 바랍니다.",
     "prod_inc_tech": "신청 기술 설명서 상 제품명에 기술명이 함께 기재되어 있습니다. 기술명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
-    "prod_inc_model": " - 신청 제품 설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
+    "prod_inc_model": "신청 제품 설명서 상 제품명에 모델명이 함께 기재되어 있습니다. 모델명을 제외하고 제품명을 시스템 상의 제품명과 동일하게 작성해주시기 바랍니다.",
     "prod_model_info": "모델정보 누락: 신청모델별 차이를 확인할 수 있는 정보(스펙, 치수, 용량 등)을 작성해 주시기 바랍니다. (설명서 또는 붙임)",
 
     "ip_open_err": "파일이 오류가 있어 열람할 수 없습니다.",
@@ -386,7 +386,7 @@ if global_type in ["tech", "prod"]:
                     # 이전에는 두 문구를 합쳐서 출력했지만, 항목이 분리되었으므로 수정된 문구만 단독으로 출력하도록 수정했습니다.
                     results.append(tpl["prod_inc_tech"]); total_errors += 1
                 elif ans == "모델명 포함": 
-                    results.append(tpl["prod_as_tech"] + "\n" + tpl["prod_inc_model"]); total_errors += 1
+                    results.append(tpl["prod_inc_model"]); total_errors += 1
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
