@@ -398,19 +398,19 @@ if global_type in ["tech", "prod"]:
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
-                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="코드 입력").strip()
+                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="분류 코드 입력").strip()
             
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
-                    st.markdown(":orange[💡 * 2026년에 삭제된 분류코드 입니다.]") 
+                    st.markdown(":orange[💡 2026년 개정으로 삭제된 분류코드 입니다.]") 
                     results.append(tpl["doc_tech_code_err"])
                     total_errors += 1
                 elif input_code in TECH_CODE_DB["main_mod"]:
-                    st.markdown(":orange[💡 * 2026년에 대분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":orange[💡 2026년 개정으로 대분류가 수정된 분류 코드입니다.]")
                 elif input_code in TECH_CODE_DB["mid_mod"]:
-                    st.markdown(":orange[💡 * 2026년에 중분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":orange[💡 2026년 개정으로 중분류가 수정된 분류 코드입니다.]")
                 elif input_code in TECH_CODE_DB["sub_mod"]:
-                    st.markdown(":orange[💡 * 2026년에 소분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":orange[💡 2026년 개정으로 소분류가 수정된 분류 코드입니다.]")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
