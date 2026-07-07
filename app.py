@@ -469,7 +469,7 @@ if global_type == "company":
 
 # --- 7. 사이드바 하단 (결과 출력 및 인라인 2-Step 버튼) ---
 with st.sidebar:
-    error_count_placeholder.info(f"📜 보완 항목: **{total_errors}개**")
+    error_count_placeholder.info(f"💡 보완 필요: **{total_errors}개**")
     
     if results:
         numbered_results = [f"{i+1}. {res}" for i, res in enumerate(results)]
