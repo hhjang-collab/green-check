@@ -402,7 +402,7 @@ if global_type in ["tech", "prod"]:
             
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
-                    st.markdown(":red[💡 2026년 개정으로 삭제된 분류 코드 입니다.]") 
+                    st.markdown(":yellow[💡 2026년 개정으로 삭제된 분류 코드 입니다.]") 
                     results.append(tpl["doc_tech_code_err"])
                     total_errors += 1
                 elif input_code in TECH_CODE_DB["main_mod"]:
