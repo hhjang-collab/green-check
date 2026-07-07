@@ -179,7 +179,7 @@ default_templates = {
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
     
     "doc_core_tech_err": "설명서(1p): 핵심요소기술의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
-    "doc_tech_code_err": "26년 기술분류코드 개정에서 제외된 분류코드 입니다.",
+    "doc_tech_code_err": "2026년 기술분류코드 개정에서 제외된 분류코드 입니다. 확인 후 변경 해주시기 바랍니다",
     
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
@@ -398,19 +398,19 @@ if global_type in ["tech", "prod"]:
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
-                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="분류 코드 입력").strip()
+                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="분류코드 입력").strip()
             
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
-                    st.markdown(":red[💡 2026년 개정으로 삭제된 분류 코드 입니다.]") 
+                    st.markdown(":red[💡 2026년 개정으로 삭제된 분류코드 입니다.]") 
                     results.append(tpl["doc_tech_code_err"])
                     total_errors += 1
                 elif input_code in TECH_CODE_DB["main_mod"]:
-                    st.markdown(":red[💡 2026년 개정으로 대분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":red[💡 2026년 개정으로 대분류가 수정된 분류코드입니다.]")
                 elif input_code in TECH_CODE_DB["mid_mod"]:
-                    st.markdown(":red[💡 2026년 개정으로 중분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":red[💡 2026년 개정으로 중분류가 수정된 분류코드입니다.]")
                 elif input_code in TECH_CODE_DB["sub_mod"]:
-                    st.markdown(":red[💡 2026년 개정으로 소분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":red[💡 2026년 개정으로 소분류가 수정된 분류코드입니다.]")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
