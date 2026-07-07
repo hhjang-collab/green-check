@@ -28,6 +28,7 @@ checkbox_labels = {
     "doc_lvl": "기술수준 불일치",
     "doc_comp": "설명서 기업명 불일치",
     "doc_core_tech": "핵심요소기술 불일치",
+    "doc_tech_code": "기술분류코드 오류",  # 📌 [추가] 통계용 라벨 추가
     "tech_err": "기술명 오류",
     "prod_err": "제품명 오류",
     "prod_model_info": "모델정보 누락",
@@ -151,6 +152,14 @@ if logo_base64:
 
 st.markdown(custom_css, unsafe_allow_html=True)
 
+# --- [추가] 기술 분류 코드 검증용 데이터베이스 정의 ---
+TECH_CODE_DB = {
+    "deleted": ["T020701", "T020703", "T040101", "T040102", "T040103", "T040105", "T040106", "T040108"],
+    "main_mod": ["T060101"],
+    "mid_mod": ["T020101", "T030801", "T060401"],
+    "sub_mod": ["T020508", "T090301"]
+}
+
 # --- 4. 자동 생성 문구 템플릿 정의 ---
 default_templates = {
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
@@ -176,6 +185,7 @@ default_templates = {
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
     
     "doc_core_tech_err": "설명서(1p): 핵심요소기술의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
+    "doc_tech_code_err": "26년 기술분류코드 개정에서 제외된 분류코드 입니다.", # 📌 [추가] 소분류[삭제] 의견 템플릿
     
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
@@ -360,10 +370,14 @@ if global_type in ["tech", "prod"]:
             if tech_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "제품명 작성"], horizontal=True, key="tech_err_type")
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
-                elif ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
+                if ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
             
             if cols_mismatch_tech[1].checkbox("핵심요소기술", key="doc_core_tech"): 
                 results.append(tpl["doc_core_tech_err"]); total_errors += 1
+
+            # 📌 [추가] 기술분류코드 체크박스 배치 (기술전용)
+            with cols_mismatch_tech[0]:
+                tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
         else:
             cols_mismatch_1 = st.columns(2)
@@ -383,10 +397,27 @@ if global_type in ["tech", "prod"]:
                 elif ans == "기술명 작성": 
                     results.append(tpl["prod_as_tech"]); total_errors += 1
                 elif ans == "기술명 포함": 
-                    # 이전에는 두 문구를 합쳐서 출력했지만, 항목이 분리되었으므로 수정된 문구만 단독으로 출력하도록 수정했습니다.
                     results.append(tpl["prod_inc_tech"]); total_errors += 1
                 elif ans == "모델명 포함": 
                     results.append(tpl["prod_inc_model"]); total_errors += 1
+
+            # 📌 [추가] 기술분류코드 체크박스 배치 (제품전용)
+            with cols_mismatch_2[0]:
+                tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
+
+        # 📌 [추가] 기술 분류 코드 조건부 검증 주관식 입력창 로직
+        if tech_code_err:
+            input_code = st.text_input("분류 코드 입력", key="tech_code_input").strip()
+            if input_code:
+                if input_code in TECH_CODE_DB["deleted"]:
+                    results.append(tpl["doc_tech_code_err"])
+                    total_errors += 1
+                elif input_code in TECH_CODE_DB["main_mod"]:
+                    st.info("💡 2026년에 대분류가 수정된 분류 코드입니다.")
+                elif input_code in TECH_CODE_DB["mid_mod"]:
+                    st.info("💡 2026년에 중분류가 수정된 분류 코드입니다.")
+                elif input_code in TECH_CODE_DB["sub_mod"]:
+                    st.info("💡 2026년에 소분류가 수정된 분류 코드입니다.")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
@@ -495,4 +526,3 @@ with st.sidebar:
     
     # 상시 양식 초기화 버튼
     st.button("🔄 초기화", use_container_width=True, key="reset_btn_2", on_click=clear_form)
-    
