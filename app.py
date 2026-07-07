@@ -376,7 +376,7 @@ if global_type in ["tech", "prod"]:
                 if ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
 
             with cols_mismatch_3[0]:
-                tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
+                tech_code_err = st.checkbox("분류코드 검증", key="doc_tech_code")
             with cols_mismatch_3[1]:
                 if st.checkbox("분류코드 불일치", key="doc_code_mismatch"):
                     results.append(tpl["doc_code_mismatch_err"])
@@ -400,12 +400,12 @@ if global_type in ["tech", "prod"]:
                     results.append(tpl["prod_inc_model"]); total_errors += 1
 
             with cols_mismatch_3[0]:
-                tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
+                tech_code_err = st.checkbox("분류코드 검증", key="doc_tech_code")
 
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
-                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="분류코드 입력").strip()
+                input_code = st.text_input("분류코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="분류코드 입력").strip()
             
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
