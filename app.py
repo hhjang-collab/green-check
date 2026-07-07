@@ -402,15 +402,15 @@ if global_type in ["tech", "prod"]:
             
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
-                    st.markdown(":blue[💡 2026년 개정으로 삭제된 분류 코드 입니다.]") 
+                    st.markdown(":red[💡 2026년 개정으로 삭제된 분류 코드 입니다.]") 
                     results.append(tpl["doc_tech_code_err"])
                     total_errors += 1
                 elif input_code in TECH_CODE_DB["main_mod"]:
-                    st.markdown(":blue[💡 2026년 개정으로 대분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":red[💡 2026년 개정으로 대분류가 수정된 분류 코드입니다.]")
                 elif input_code in TECH_CODE_DB["mid_mod"]:
-                    st.markdown(":blue[💡 2026년 개정으로 중분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":red[💡 2026년 개정으로 중분류가 수정된 분류 코드입니다.]")
                 elif input_code in TECH_CODE_DB["sub_mod"]:
-                    st.markdown(":blue[💡 2026년 개정으로 소분류가 수정된 분류 코드입니다.]")
+                    st.markdown(":red[💡 2026년 개정으로 소분류가 수정된 분류 코드입니다.]")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
