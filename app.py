@@ -154,6 +154,15 @@ TECH_CODE_DB = {
     "sub_mod": ["T020508", "T090301"]
 }
 
+# --- 슬림 알림창 HTML 템플릿 ---
+def slim_alert(text):
+    html = f"""
+    <div style="padding: 10px 12px; background-color: #fff4ce; border-radius: 6px; color: #856404; font-size: 13.5px; margin-top: 5px; border: 1px solid #ffe7a0;">
+        💡 {text}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
 # --- 4. 자동 생성 문구 템플릿 정의 ---
 default_templates = {
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
@@ -394,24 +403,23 @@ if global_type in ["tech", "prod"]:
             with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
-        # 📌 [수정] 라벨 숨김 처리 및 노란색(st.warning) 경고문구 통일
+        # 📌 [수정] 입력창 컬럼 안에서 슬림 알림창 렌더링 (너비 & 높이 완벽 일치)
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
-                # 라벨을 숨겨(label_visibility="collapsed") 두께를 줄이고 대신 placeholder 제공
                 input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="코드 입력").strip()
             
-            if input_code:
-                if input_code in TECH_CODE_DB["deleted"]:
-                    st.warning("💡 * 2026년에 삭제된 분류코드 입니다.") 
-                    results.append(tpl["doc_tech_code_err"])
-                    total_errors += 1
-                elif input_code in TECH_CODE_DB["main_mod"]:
-                    st.warning("💡 * 2026년에 대분류가 수정된 분류 코드입니다.")
-                elif input_code in TECH_CODE_DB["mid_mod"]:
-                    st.warning("💡 * 2026년에 중분류가 수정된 분류 코드입니다.")
-                elif input_code in TECH_CODE_DB["sub_mod"]:
-                    st.warning("💡 * 2026년에 소분류가 수정된 분류 코드입니다.")
+                if input_code:
+                    if input_code in TECH_CODE_DB["deleted"]:
+                        slim_alert("* 2026년에 삭제된 분류코드 입니다.") 
+                        results.append(tpl["doc_tech_code_err"])
+                        total_errors += 1
+                    elif input_code in TECH_CODE_DB["main_mod"]:
+                        slim_alert("* 2026년에 대분류가 수정된 분류 코드입니다.")
+                    elif input_code in TECH_CODE_DB["mid_mod"]:
+                        slim_alert("* 2026년에 중분류가 수정된 분류 코드입니다.")
+                    elif input_code in TECH_CODE_DB["sub_mod"]:
+                        slim_alert("* 2026년에 소분류가 수정된 분류 코드입니다.")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
