@@ -154,15 +154,6 @@ TECH_CODE_DB = {
     "sub_mod": ["T020508", "T090301"]
 }
 
-# --- 슬림 알림창 HTML 템플릿 ---
-def slim_alert(text):
-    html = f"""
-    <div style="padding: 10px 12px; background-color: #fff4ce; border-radius: 6px; color: #856404; font-size: 13.5px; margin-top: 5px; border: 1px solid #ffe7a0;">
-        💡 {text}
-    </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
-
 # --- 4. 자동 생성 문구 템플릿 정의 ---
 default_templates = {
     "ceo_err": "제출하신 서류와 시스템 상의 대표자 명이 일치하지 않습니다.",
@@ -176,7 +167,7 @@ default_templates = {
     "ext_tech_name": "기존 녹색기술인증서의 기술명과 연장신청하는 녹색기술의 기술명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 기술명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
     "ext_prod_cert": "기존 녹색기술제품확인서와 녹색성과보고서(서식자료실)을 제출해 주시기 바랍니다.",
     "ext_prod_name": "기존 녹색제품확인서의 제품명과 연장신청하는 녹색기술제품의 제품명이 일치하지 않습니다.\n - 변경을 원하시면 신규로 신청해 주시고, 연장을 하시려면 기존 제품명으로 설명서와 신청서 모두 일치시켜주시기 바랍니다.",
-    "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경 시 신규로 신청해주셔야 합니다.",
+    "ext_prod_model": "연장신청시 모델 추가/변경은 불가능합니다. 모델 추가/변경 시 신규로 신청해주셔야 정합니다.",
     
     "ext_comp_cert": "기존 녹색전문기업확인서와 성과분석보고서를 제출해 주시기 바랍니다.",
     "ext_comp_name": "기존 녹색전문기업확인서의 기업명과 연장신청하는 기업명이 일치하지 않습니다.",
@@ -403,23 +394,24 @@ if global_type in ["tech", "prod"]:
             with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
-        # 📌 [수정] 입력창 컬럼 안에서 슬림 알림창 렌더링 (너비 & 높이 완벽 일치)
+        # 📌 [수정] 박스 대신 HTML/CSS를 활용한 캡션 사이즈의 컬러 텍스트 적용
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
                 input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="코드 입력").strip()
             
-                if input_code:
-                    if input_code in TECH_CODE_DB["deleted"]:
-                        slim_alert("* 2026년에 삭제된 분류코드 입니다.") 
-                        results.append(tpl["doc_tech_code_err"])
-                        total_errors += 1
-                    elif input_code in TECH_CODE_DB["main_mod"]:
-                        slim_alert("* 2026년에 대분류가 수정된 분류 코드입니다.")
-                    elif input_code in TECH_CODE_DB["mid_mod"]:
-                        slim_alert("* 2026년에 중분류가 수정된 분류 코드입니다.")
-                    elif input_code in TECH_CODE_DB["sub_mod"]:
-                        slim_alert("* 2026년에 소분류가 수정된 분류 코드입니다.")
+            if input_code:
+                alert_style = "color: #FF9F36; font-size: 13px; margin-top: -10px; display: block;"
+                if input_code in TECH_CODE_DB["deleted"]:
+                    st.markdown(f'<span style="{alert_style}">💡 * 2026년에 삭제된 분류코드 입니다.</span>', unsafe_allow_html=True)
+                    results.append(tpl["doc_tech_code_err"])
+                    total_errors += 1
+                elif input_code in TECH_CODE_DB["main_mod"]:
+                    st.markdown(f'<span style="{alert_style}">💡 * 2026년에 대분류가 수정된 분류 코드입니다.</span>', unsafe_allow_html=True)
+                elif input_code in TECH_CODE_DB["mid_mod"]:
+                    st.markdown(f'<span style="{alert_style}">💡 * 2026년에 중분류가 수정된 분류 코드입니다.</span>', unsafe_allow_html=True)
+                elif input_code in TECH_CODE_DB["sub_mod"]:
+                    st.markdown(f'<span style="{alert_style}">💡 * 2026년에 소분류가 수정된 분류 코드입니다.</span>', unsafe_allow_html=True)
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
