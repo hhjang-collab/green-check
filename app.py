@@ -394,23 +394,24 @@ if global_type in ["tech", "prod"]:
             with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
-        # 📌 [수정] 기술 분류 코드 경고 박스 제거 및 파란색 텍스트(:blue) 적용
+        # 📌 [수정] 라벨 숨김 처리 및 노란색(st.warning) 경고문구 통일
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
-                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7).strip()
+                # 라벨을 숨겨(label_visibility="collapsed") 두께를 줄이고 대신 placeholder 제공
+                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7, label_visibility="collapsed", placeholder="코드 입력").strip()
             
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
-                    st.markdown(":blue[💡 * 2026년에 삭제된 분류코드 입니다.]")
+                    st.warning("💡 * 2026년에 삭제된 분류코드 입니다.") 
                     results.append(tpl["doc_tech_code_err"])
                     total_errors += 1
                 elif input_code in TECH_CODE_DB["main_mod"]:
-                    st.markdown(":blue[💡 * 2026년에 대분류가 수정된 분류 코드입니다.]")
+                    st.warning("💡 * 2026년에 대분류가 수정된 분류 코드입니다.")
                 elif input_code in TECH_CODE_DB["mid_mod"]:
-                    st.markdown(":blue[💡 * 2026년에 중분류가 수정된 분류 코드입니다.]")
+                    st.warning("💡 * 2026년에 중분류가 수정된 분류 코드입니다.")
                 elif input_code in TECH_CODE_DB["sub_mod"]:
-                    st.markdown(":blue[💡 * 2026년에 소분류가 수정된 분류 코드입니다.]")
+                    st.warning("💡 * 2026년에 소분류가 수정된 분류 코드입니다.")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
