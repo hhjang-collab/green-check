@@ -28,7 +28,7 @@ checkbox_labels = {
     "doc_lvl": "기술수준 불일치",
     "doc_comp": "설명서 기업명 불일치",
     "doc_core_tech": "핵심요소기술 불일치",
-    "doc_tech_code": "기술분류코드 오류",  # 📌 [추가] 통계용 라벨 추가
+    "doc_tech_code": "기술분류코드 오류",  
     "tech_err": "기술명 오류",
     "prod_err": "제품명 오류",
     "prod_model_info": "모델정보 누락",
@@ -54,30 +54,24 @@ checkbox_labels = {
 # --- 구글 스프레드시트 누적 저장 함수 ---
 def save_to_google_sheets(global_type, req_type, total_errors, selected_items):
     try:
-        # 1. 구글 API 인증 범위(Scope) 설정
         scopes = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ]
         
-        # 2. Streamlit Cloud Secrets에서 서비스 계정 정보 로드
         creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
         client = gspread.authorize(creds)
         
-        # 3. 구글 스프레드시트 열기
         sheet_name = st.secrets.get("GOOGLE_SHEET_NAME", "녹색인증_검토이력")
         sheet = client.open(sheet_name).sheet1
         
-        # 4. 데이터 정제 및 포맷팅
         kst = timezone(timedelta(hours=9))
-        current_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S") # ✅ datetime.now(kst) 로 수정!
+        current_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S") 
         type_kor = "기술" if global_type == "tech" else ("제품" if global_type == "prod" else "전문기업")
         req_kor = "신규" if req_type == "new" else "연장"
         
-        # 📌 [수정] 긴 문장 대신 선택된 통계용 항목 이름들을 쉼표로 연결하여 저장
         items_str = ", ".join(selected_items) if selected_items else "오류 없음"
         
-        # 5. 시트 맨 아래에 행 추가
         sheet.append_row([current_time, type_kor, req_kor, total_errors, items_str])
         return True
     except Exception as e:
@@ -152,7 +146,7 @@ if logo_base64:
 
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# --- [추가] 기술 분류 코드 검증용 데이터베이스 정의 ---
+# --- 기술 분류 코드 검증용 데이터베이스 정의 ---
 TECH_CODE_DB = {
     "deleted": ["T020701", "T020703", "T040101", "T040102", "T040103", "T040105", "T040106", "T040108"],
     "main_mod": ["T060101"],
@@ -185,7 +179,7 @@ default_templates = {
     "doc_comp_err": "설명서 상 기업명은 시스템과 동일하게 기재되어야 합니다.",
     
     "doc_core_tech_err": "설명서(1p): 핵심요소기술의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
-    "doc_tech_code_err": "26년 기술분류코드 개정에서 제외된 분류코드 입니다.", # 📌 [추가] 소분류[삭제] 의견 템플릿
+    "doc_tech_code_err": "26년 기술분류코드 개정에서 제외된 분류코드 입니다.",
     
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
@@ -219,7 +213,6 @@ default_templates = {
 
 # --- 완벽한 체크박스 강제 초기화 로직 ---
 def clear_form():
-    # 📌 [수정] 보호할 키 목록에 초기화 버튼의 key("reset_btn_2") 추가!
     keep_keys = ["authenticated", "global_type", "req_type", "reset_btn_2"]
     
     for key in list(st.session_state.keys()):
@@ -228,7 +221,7 @@ def clear_form():
                 try:
                     st.session_state[key] = False
                 except:
-                    pass # 버튼 등 직접 수정이 불가능한 시스템 키 건너뛰기
+                    pass 
             else:
                 try:
                     del st.session_state[key]
@@ -360,35 +353,33 @@ if global_type in ["tech", "prod"]:
         st.write("") 
         st.markdown("**🔹 내용 오류**")
         
-        if global_type == "tech":
-            cols_mismatch_tech = st.columns(2)
-            if cols_mismatch_tech[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
-            if cols_mismatch_tech[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
+        # 📌 [수정] 기술/제품의 레이아웃(여백) 불일치를 해결하기 위해 줄(Row) 단위로 컬럼 통일
+        cols_mismatch_1 = st.columns(2)
+        if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
+        if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
             
-            with cols_mismatch_tech[0]:
+        cols_mismatch_2 = st.columns(2)
+        cols_mismatch_3 = st.columns(2)
+        
+        if global_type == "tech":
+            with cols_mismatch_2[0]:
                 tech_err = st.checkbox("기술명", key="tech_err")
+            if cols_mismatch_2[1].checkbox("핵심요소기술", key="doc_core_tech"): 
+                results.append(tpl["doc_core_tech_err"]); total_errors += 1
+            
             if tech_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "제품명 작성"], horizontal=True, key="tech_err_type")
                 if ans == "명칭 불일치": results.append(tpl["doc_name_err"].replace("{type}", type_str)); total_errors += 1
                 if ans == "제품명 작성": results.append(tpl["tech_as_prod"]); total_errors += 1
-            
-            if cols_mismatch_tech[1].checkbox("핵심요소기술", key="doc_core_tech"): 
-                results.append(tpl["doc_core_tech_err"]); total_errors += 1
 
-            # 📌 [추가] 기술분류코드 체크박스 배치 (기술전용)
-            with cols_mismatch_tech[0]:
+            with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
-        else:
-            cols_mismatch_1 = st.columns(2)
-            if cols_mismatch_1[0].checkbox("기술수준", key="doc_lvl"): results.append(tpl["doc_level_err"]); total_errors += 1
-            if cols_mismatch_1[1].checkbox("기업명", key="doc_comp"): results.append(tpl["doc_comp_err"]); total_errors += 1
-                
-            cols_mismatch_2 = st.columns(2)
+        else: # prod
             with cols_mismatch_2[0]:
                 prod_err = st.checkbox("제품명", key="prod_err")
-            with cols_mismatch_2[1]:
-                if st.checkbox("모델별 정보 누락", key="prod_model_info"): results.append(tpl["prod_model_info"]); total_errors += 1
+            if cols_mismatch_2[1].checkbox("모델별 정보 누락", key="prod_model_info"): 
+                results.append(tpl["prod_model_info"]); total_errors += 1
                 
             if prod_err:
                 ans = st.radio("오류 내용", ["명칭 불일치", "기술명 작성", "기술명 포함", "모델명 포함"], horizontal=True, key="prod_err_type")
@@ -401,23 +392,26 @@ if global_type in ["tech", "prod"]:
                 elif ans == "모델명 포함": 
                     results.append(tpl["prod_inc_model"]); total_errors += 1
 
-            # 📌 [추가] 기술분류코드 체크박스 배치 (제품전용)
-            with cols_mismatch_2[0]:
+            with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
-        # 📌 [추가] 기술 분류 코드 조건부 검증 주관식 입력창 로직
+        # 📌 [수정] 기술 분류 코드 조건부 검증 및 입력창 로직 (길이 축소 및 삭제 알림 추가)
         if tech_code_err:
-            input_code = st.text_input("분류 코드 입력", key="tech_code_input").strip()
+            col_input, _ = st.columns([1, 2]) # 너비를 1/3 비율로 축소
+            with col_input:
+                input_code = st.text_input("분류 코드 입력", key="tech_code_input", max_chars=7).strip()
+            
             if input_code:
                 if input_code in TECH_CODE_DB["deleted"]:
+                    st.warning("💡 * 2026년에 삭제된 분류코드 입니다.") # 📌 [추가] 삭제 알림 텍스트
                     results.append(tpl["doc_tech_code_err"])
                     total_errors += 1
                 elif input_code in TECH_CODE_DB["main_mod"]:
-                    st.info("💡 2026년에 대분류가 수정된 분류 코드입니다.")
+                    st.info("💡 * 2026년에 대분류가 수정된 분류 코드입니다.")
                 elif input_code in TECH_CODE_DB["mid_mod"]:
-                    st.info("💡 2026년에 중분류가 수정된 분류 코드입니다.")
+                    st.info("💡 * 2026년에 중분류가 수정된 분류 코드입니다.")
                 elif input_code in TECH_CODE_DB["sub_mod"]:
-                    st.info("💡 2026년에 소분류가 수정된 분류 코드입니다.")
+                    st.info("💡 * 2026년에 소분류가 수정된 분류 코드입니다.")
 
         st.write("") 
         st.markdown("**🔹 목차 누락**")
@@ -486,14 +480,12 @@ with st.sidebar:
         
     st.text_area("결과 확인", value=final_output, height=400, label_visibility="collapsed")
     
-    # 📌 [핵심 추가] 내용 변경 감지 로직!
-    # 저장이 완료된 상태인데, 현재 텍스트가 방금 저장한 텍스트와 다르다면? (체크박스를 건드렸다면)
+    # 📌 내용 변경 감지 로직
     if st.session_state["is_saved"] and st.session_state.get("saved_text") != final_output:
-        st.session_state["is_saved"] = False # 즉시 저장 상태를 해제해서 기록 버튼을 다시 띄움!
+        st.session_state["is_saved"] = False 
     
     # 인라인 2-Step 저장 및 복사 로직
     if not st.session_state["is_saved"]:
-        # Step 1: 시트에 저장 버튼 활성화
         if st.button("💾 검토 결과 기록", type="primary", use_container_width=True):
             if total_errors > 0 or results:
                 with st.spinner("구글 시트에 기록 중..."):
@@ -502,27 +494,23 @@ with st.sidebar:
                         if st.session_state.get(key)
                     ]
                     
-                    # (이전 질문에서 추가한 목차 자동 추출 로직)
                     for key in st.session_state.keys():
                         if key.startswith("toc_") and st.session_state.get(key):
                             toc_num = key.replace("toc_", "")
                             selected_item_names.append(f"목차누락({toc_num})")
                             
-                    # 시트 저장 함수 호출
                     success = save_to_google_sheets(global_type, req_type, total_errors, selected_item_names)
                     
                     if success:
                         st.session_state["is_saved"] = True
-                        st.session_state["saved_text"] = final_output # 📌 [추가] 저장할 때의 완벽한 텍스트를 기억함
+                        st.session_state["saved_text"] = final_output 
                         st.rerun() 
             else:
                 st.warning("⚠️ 선택된 보완 항목이 없습니다.")
     else:
-        # Step 2: 저장이 무사히 끝나면 강렬한 복사 버튼 활성화
         st.success("✅ 저장 성공! 아래 버튼을 클릭해 복사하세요.")
         render_copy_button(final_output)
                     
     st.markdown('<hr style="margin-top: 15px; margin-bottom: 15px; border: 0; border-top: 1px solid rgba(49, 51, 63, 0.2);">', unsafe_allow_html=True)
     
-    # 상시 양식 초기화 버튼
     st.button("🔄 초기화", use_container_width=True, key="reset_btn_2", on_click=clear_form)
