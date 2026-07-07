@@ -29,7 +29,7 @@ checkbox_labels = {
     "doc_comp": "설명서 기업명 불일치",
     "doc_core_tech": "핵심요소기술 불일치",
     "doc_tech_code": "기술분류코드 오류",  
-    "doc_code_mismatch": "분류코드 불일치",  # 📌 [추가] 통계용 라벨
+    "doc_code_mismatch": "분류코드 불일치", 
     "tech_err": "기술명 오류",
     "prod_err": "제품명 오류",
     "prod_model_info": "모델정보 누락",
@@ -44,7 +44,7 @@ checkbox_labels = {
     "t_old": "시험 3년 초과",
     "t_self": "자체성적서 사유서 누락",
     "t_client": "시험 의뢰인 불일치",
-    "t_open_err": "시험성적서 파일오류",  # 📌 [추가] 통계용 라벨
+    "t_open_err": "시험성적서 파일오류", 
     "p_iso": "품질경영 증빙 누락",
     "fac_ceo": "공장등록증 대표자 불일치",
     "fac_miss": "생산증명 증빙 누락",
@@ -182,7 +182,7 @@ default_templates = {
     
     "doc_core_tech_err": "설명서(1p): 핵심요소기술의 내용이 온라인신청서의 내용과 일치하지 않습니다.",
     "doc_tech_code_err": "2026년 기술분류코드 개정에서 제외된 분류코드 입니다. 확인 후 변경 해주시기 바랍니다",
-    "doc_code_mismatch_err": "분류코드가 온라인 신청서와 일치하지 않습니다.",  # 📌 [추가] 검토 의견 문구
+    "doc_code_mismatch_err": "분류코드가 온라인 신청서와 일치하지 않습니다.", 
     
     "doc_toc_err": "서식자료실의 신청{type} 설명서 양식을 준수하여 세부 항목을 모두 작성해 주시기 바랍니다. ({tocs} 누락, 서식자료실의 작성가이드라인 참조)",
     
@@ -204,7 +204,7 @@ default_templates = {
     "test_old": "최근 3년이내 자료로 제출해주시기 바랍니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 10p. 참조)",
     "test_self": "공인된 외부기관이 아닌 자체 시험성적서 혹은 의뢰자 제시 시험성적서를 제출하셔야 할 경우, 사유서와 함께 제출해 주시기 바랍니다.",
     "test_client": "시험성적서 상에 모든 신청 업체가 의뢰인(기업)으로 확인되야 합니다. 시험성적서 관련해서 자세한 사항은 평가기관에 문의바랍니다.",
-    "test_open_err": "파일오류/암호화 등의 사유로 확인되지 않습니다. 확인 후 다시 첨부해주시기 바랍니다.",  # 📌 [추가] 검토 의견 문구
+    "test_open_err": "파일오류/암호화 등의 사유로 확인되지 않습니다. 확인 후 다시 첨부해주시기 바랍니다.", 
 
     "prod_iso": "품질경영 증빙은 KS 인증 또는 ISO 인증 서류로 준비/제출해 주셔야 합니다. (공지사항 내 \"2025 녹색인증 FAQ 매뉴얼\", 56p. 참조)\n - ISO/KS/NET/NEP/JIS/GOST/CCC 등",
     "fac_ceo": "사업자등록증과 공장등록증의 대표자 명이 불일치 합니다.",
@@ -377,7 +377,6 @@ if global_type in ["tech", "prod"]:
 
             with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
-            # 📌 [추가] 분류코드 불일치 체크박스 도입 (기술 전용)
             with cols_mismatch_3[1]:
                 if st.checkbox("분류코드 불일치", key="doc_code_mismatch"):
                     results.append(tpl["doc_code_mismatch_err"])
@@ -403,7 +402,6 @@ if global_type in ["tech", "prod"]:
             with cols_mismatch_3[0]:
                 tech_code_err = st.checkbox("기술 분류 코드", key="doc_tech_code")
 
-        # 📌 st.warning 박스를 없애고 마크다운 컬러 텍스트로 변경
         if tech_code_err:
             col_input, _ = st.columns([1, 2])
             with col_input:
@@ -462,12 +460,10 @@ if global_type == "tech":
         if cols5[0].checkbox("자체성적서 사유서 누락", key="t_self"): results.append(tpl["test_self"]); total_errors += 1
         if cols5[1].checkbox("의뢰인 불일치", key="t_client"): results.append(tpl["test_client"]); total_errors += 1
         
-        # 📌 [추가] 시험성적서 파일 오류 배치용 줄 세트 생성
-        cols5_2 = st.columns(2)
-        with cols5_2[0]:
-            if st.checkbox("파일 오류", key="t_open_err"):
-                results.append(tpl["test_open_err"])
-                total_errors += 1
+        # 📌 [수정] 새로운 st.columns를 만들지 않고 기존 cols5[0]에 이어서 추가하여 여백(Gap) 통일
+        if cols5[0].checkbox("파일 오류", key="t_open_err"): 
+            results.append(tpl["test_open_err"])
+            total_errors += 1
 
 # [6. 제품 추가 서류 (제품 전용)]
 if global_type == "prod":
